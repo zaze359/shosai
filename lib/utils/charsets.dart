@@ -53,7 +53,7 @@ class CharsetCodec extends cvt.Encoding {
 
 /// 编码器
 class CharsetEncoder {
-  CharsetEncoder(this.charset);
+  CharsetEncoder([this.charset]);
 
   String? charset;
   DefaultEncoder? _encoder;
@@ -94,7 +94,7 @@ class CharsetEncoder {
 
 /// 解码器
 class CharsetDecoder {
-  CharsetDecoder(this.charset);
+  CharsetDecoder([this.charset]);
 
   String? charset;
 

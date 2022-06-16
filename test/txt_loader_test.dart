@@ -1,9 +1,12 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shosai/data/book.dart';
 import 'package:shosai/utils/loader/txt.dart';
 
 void main() {
   group('Testing TxtLoader', () {
-    TxtLoader txtLoader = TxtLoader();
+    Book book = Book(id:"id", name:"name", extension: "", localPath: "localpath");
+    BookConfig bookConfig = BookConfig(300, 300);
+    TxtLoader txtLoader = TxtLoader(book,bookConfig);
     test('match chapter test', () async {
       expect(txtLoader.matchTitle("第一"), null);
       expect(

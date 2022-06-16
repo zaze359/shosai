@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:path/path.dart' as path;
+import 'package:shosai/main.dart';
 import 'package:shosai/utils/display_util.dart';
 
 /// Description : 书籍
@@ -97,30 +99,46 @@ class BookChapter {
 class BookConfig {
   BookConfig(this.viewWidth, this.viewHeight);
 
+  /// view的宽度(单位相当于android的dp)
   double viewWidth;
+  /// view的高度(单位相当于android的dp)
   double viewHeight;
   int paddingTop = 0;
   int paddingBottom = 0;
   int paddingLeft = 0;
   int paddingRight = 0;
 
-  double get pageWidthPixel {
-    return (viewWidth - paddingLeft - paddingRight) * Display.devicePixelRatio;
+  double get pageWidth {
+    return (viewWidth - paddingLeft - paddingRight);
   }
 
-  double get pageHeightPixel {
-    return (viewHeight - paddingTop - paddingBottom) * Display.devicePixelRatio;
+  double get pageHeight {
+    return (viewHeight - paddingTop - paddingBottom);
   }
+
+  // double get pageWidthPixel {
+  //   return pageWidth * Display.devicePixelRatio;
+  // }
+  //
+  // double get pageHeightPixel {
+  //   return pageHeight * Display.devicePixelRatio;
+  // }
 
   /// 创建文本绘制器，用于测量文本
   TextPainter textPainter = TextPainter(
-    // locale: Localizations.localeOf(context),
+    locale: Localizations.localeOf(navKey.currentState!.context),
     maxLines: 1,
     textDirection: TextDirection.ltr,
   );
 
-  TextStyle textStyle = TextStyle(
-    fontSize: 18,
+  TextStyle titleStyle = const TextStyle(
+    fontSize: 24,
+    fontWeight: FontWeight.bold,
+    backgroundColor: Colors.red,
+  );
+  TextStyle textStyle = const TextStyle(
+    fontSize: 20,
+    backgroundColor: Colors.blue,
   );
 
   @override

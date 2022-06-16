@@ -4,6 +4,7 @@ import 'package:shosai/routes.dart';
 import 'package:shosai/utils/display_util.dart';
 import 'package:shosai/utils/log.dart';
 
+
 void main() {
   runApp(const MyApp());
   MyLog.d("main",
@@ -20,7 +21,10 @@ void main() {
   // SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
 }
 
+final navKey = GlobalKey<NavigatorState>();
+
 class MyApp extends StatelessWidget {
+
   const MyApp({super.key});
 
   // This widget is the root of your application.
@@ -30,6 +34,7 @@ class MyApp extends StatelessWidget {
     VisualDensity density =
         VisualDensity(horizontal: densityAmt, vertical: densityAmt);
     return MaterialApp(
+      navigatorKey: navKey,
       title: 'Flutter Demo',
       initialRoute: "/",
       theme: ThemeData(

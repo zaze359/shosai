@@ -64,9 +64,12 @@ abstract class ChapterLoader {
   ChapterLoader(this.book, this.config);
 
   /// 匹配章节
+  /// 将书籍内容按照章节拆分开
   Future<List<BookChapter>> matchChapters();
 
   /// 加载指定章节内容
+  /// 将章节内容分页
+  /// 页内分行
   Future<ChapterState> loadChapterContent(BookChapter chapter);
 
   /// 若存在章节标题则返回标题内容，不存在则返回null

@@ -88,6 +88,10 @@ class ChapterState {
     _pages = value;
   }
 
+  void addPage(PageState pageState) {
+    _pages.add(pageState);
+  }
+
   /// 当前章节的第几页
   int pageIndex = 0;
 
@@ -133,9 +137,19 @@ class ChapterState {
 
 /// 阅读页
 class PageState {
-  PageState([this.lines = const []]);
+  PageState();
 
-  List<TextSpan> lines = [];
+  List<PageLine> lines = [];
+
+  bool get isNotEmpty => lines.isNotEmpty;
+}
+
+class PageLine {
+  String text;
+  TextStyle style;
+  double height;
+
+  PageLine(this.text, {required this.style, required this.height});
 }
 
 // /// 段落

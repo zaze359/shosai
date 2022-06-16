@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:shosai/data/book.dart';
@@ -21,6 +22,9 @@ class TxtLoader extends ChapterLoader {
 
   /// 换行符 \n
   final int _blank = 0x0a;
+
+  /// \u200b unicode零宽度字符,不可见字符
+  final List<String> ignoreChars = ['\u200b'];
 
   TxtLoader(super.book, super.config);
 
@@ -126,25 +130,144 @@ class TxtLoader extends ChapterLoader {
     // double maxWidth = config.pageWidthPixel;
     // double maxHeight = config.pageHeightPixel;
     //
-    List<TextSpan> lines = [];
+    List<PageLine> lines = [];
+    TextPainter textPainter = config.textPainter;
+    TextStyle style;
+    double maxWidth = config.pageWidth;
+    double maxHeight = config.pageHeight;
+    MyLog.d("loadChapterContent", "maxSize: $maxWidth/$maxHeight");
+
     await for (String line
         in decoder.bind(stream).transform(const LineSplitter())) {
       // for (var element in line.characters) {
       //   // 测量文字
       // }
-      measure(config.textPainter, line, config.pageWidthPixel);
-      lines.add(TextSpan(text: "$line\n"));
+      if (lines.isEmpty) {
+        // 第一行。是标题
+        style = config.titleStyle;
+      } else {
+        style = config.textStyle;
+      }
+      // --------------------------------------------------
+      line = line.trim();
+      if (line.isEmpty) {
+        continue;
+      }
+      if (line.length == 1) {
+        // 可能是一些非法字符
+        if (ignoreChars.contains(line)) {
+          continue;
+        }
+        CharsetEncoder encoder = CharsetEncoder();
+        MyLog.d(
+            "loadChapterContent",
+            "CharsetEncoder: ${line.codeUnits}/${encoder.encode(line).map((e) {
+              return e.toRadixString(16);
+            })}/${encoder.charset}");
+        measure(textPainter, line, style, maxWidth);
+        if (textPainter.width == 0) {
+          continue;
+        }
+      }
+      // 格式化line
+      line = formatLine(line);
+      measure(textPainter, line, style, maxWidth);
+      if (!textPainter.didExceedMaxLines) {
+        lines.add(PageLine(line, style: style, height: textPainter.height));
+        continue;
+      }
+      // 超出了页面宽度
+      int edgeIndex = 0;
+      int startIndex = edgeIndex;
+      String splitLine = line;
+      while (edgeIndex < line.length) {
+        // textPainter 需要提前layout()
+        edgeIndex =
+            edgeIndex + splitTheLine(textPainter, splitLine, maxWidth, style);
+        // TODO 需要处理分割后的空白部分
+        // MyLog.d("loadChapterContent",
+        //     "overflow edgeIndex: $startIndex/$edgeIndex; $splitLine");
+        lines.add(PageLine(line.substring(startIndex, edgeIndex),
+            style: style, height: textPainter.height));
+        startIndex = edgeIndex;
+        //
+        splitLine = line.substring(edgeIndex, line.length);
+        measure(textPainter, splitLine, style, maxWidth);
+      }
     }
-    PageState pageState = PageState(lines);
-    chapterState.pages = [pageState];
+
+    // MyLog.d("loadChapterContent", "------- lines: ${lines.length}");
+    double curHeight = 0;
+    PageState pageState = PageState();
+    for (PageLine line in lines) {
+      curHeight += line.height;
+      if (curHeight > maxHeight) {
+        chapterState.addPage(pageState);
+        pageState = PageState();
+        curHeight = line.height;
+      }
+      // MyLog.d("loadChapterContent", "line: ${line.text}");
+      pageState.lines.add(line);
+    }
+    if (pageState.isNotEmpty) {
+      chapterState.addPage(pageState);
+    }
     return chapterState;
   }
 
+  String formatLine(String line) {
+    line = line.trim();
+    if (line.isNotEmpty) {
+      if (line.length == 1) {
+        MyLog.d("loadChapterContent",
+            "formatLine: $line/${line.codeUnitAt(0)}/${"\r\n".codeUnits}");
+      }
+      return "    $line";
+    } else {
+      return "";
+    }
+  }
+
+  int splitTheLine(
+      TextPainter textPainter, String line, double maxWidth, TextStyle style) {
+    int edgeIndex;
+    // 全部文本超出一行
+    if (textPainter.didExceedMaxLines) {
+      // 大致定位文本边界：实际文本宽度/最大宽度
+      edgeIndex = line.length * maxWidth ~/ textPainter.minIntrinsicWidth;
+      measure(textPainter, line.substring(0, edgeIndex), style, maxWidth);
+      // MyLog.d("loadChapterContent", "----------------------------------------");
+      if (!textPainter.didExceedMaxLines) {
+        // 没有超出宽度
+        while (!textPainter.didExceedMaxLines && edgeIndex < line.length - 1) {
+          //若不满一行，则尝试往后增加字符
+          edgeIndex++;
+          measure(textPainter, line.substring(0, edgeIndex), style, maxWidth);
+        }
+        if (textPainter.didExceedMaxLines) {
+          edgeIndex--;
+        }
+      } else {
+        // 若超出宽度，往回减字符，找到最近的边界。
+        while (textPainter.didExceedMaxLines) {
+          edgeIndex--;
+          measure(textPainter, line.substring(0, edgeIndex), style, maxWidth);
+        }
+      }
+    } else {
+      edgeIndex = line.length;
+    }
+    return edgeIndex;
+  }
+
   /// 测量文本宽高
-  void measure(TextPainter textPainter, String text, double maxWidth) {
-    textPainter.text = TextSpan(text: text, style: config.textStyle);
+  TextSpan measure(
+      TextPainter textPainter, String line, TextStyle style, double maxWidth) {
+    TextSpan span = TextSpan(text: line, style: style);
+    textPainter.text = TextSpan(text: line, style: style);
     textPainter.layout(maxWidth: maxWidth);
     // MyLog.d("loadChapterContent",
-    //     "_textPainter: ${textPainter.width}/${textPainter.height}/${textPainter.didExceedMaxLines} >> $text");
+    //     "_textPainter: ${textPainter.width}/${textPainter.height}/${textPainter.didExceedMaxLines}/${textPainter.minIntrinsicWidth} >> ${span.text}");
+    return span;
   }
 }

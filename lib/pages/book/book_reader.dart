@@ -32,15 +32,16 @@ class _BookReaderPageState extends State<BookReaderPage> {
     MyLog.d("_BookReaderPageState", "build");
     final bookControl = widget._bookController;
     return Scaffold(
-        // extendBodyBehindAppBar: true,
-        appBar: AppBar(
-          // systemOverlayStyle: SystemUiOverlayStyle.light,
-          // backgroundColor: Colors.transparent,
-          // foregroundColor: Colors.transparent,
-          toolbarHeight: 0,
-        ),
-        // SafeArea
-        body: LayoutBuilder(builder: (context, boxConstraints) {
+      // extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        // systemOverlayStyle: SystemUiOverlayStyle.light,
+        // backgroundColor: Colors.transparent,
+        // foregroundColor: Colors.transparent,
+        toolbarHeight: 0,
+      ),
+      // SafeArea
+      body: LayoutBuilder(
+        builder: (context, boxConstraints) {
           // 获取页面尺寸
           bookControl.updateBookConfig(
               BookConfig(boxConstraints.maxWidth, boxConstraints.maxHeight));
@@ -65,7 +66,9 @@ class _BookReaderPageState extends State<BookReaderPage> {
               },
             ),
           );
-        }));
+        },
+      ),
+    );
   }
 }
 
@@ -113,6 +116,7 @@ class _ReadViewState extends State<_ReadView> {
           "keepScrollOffset: 1  ${_controller.keepScrollOffset}");
     });
     return LayoutBuilder(builder: (context, boxConstraints) {
+      // 获取页面尺寸
       double aspectRatio = boxConstraints.maxWidth / boxConstraints.maxHeight;
       return Stack(
         children: [
@@ -163,6 +167,7 @@ class _TouchBlockView extends StatelessWidget {
   Function(String text) onPressed;
 
   void _onPressed() {
+    var list = List<String>.of(["A", "B", "C"]);
     onPressed(text);
   }
 
@@ -190,10 +195,24 @@ class _SinglePageView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // SelectableText
-    return Text.rich(
-      TextSpan(
-        children: pageState.lines,
-      ),
+    // var list = ;
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: pageState.lines.map((e) {
+        return Text(e.text, style: e.style);
+      }).toList(),
     );
+    // return Text.rich(
+    //   TextSpan(
+    //     style: TextStyle(
+    //       fontSize: 0,
+    //     ),
+    //     children: pageState.lines.map((e) {
+    //       return TextSpan(text: e.text, style: e.style);
+    //     }).toList(),
+    //   ),
+    //   textAlign: TextAlign.left,
+    // );
   }
 }
