@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:shosai/pages/book/bookshelf.dart';
+import 'package:shosai/pages/bookshelf.dart';
+import 'package:shosai/utils/log.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -8,7 +9,7 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   int _selectedTabIndex = 0;
 
   void _onItemTapped(int tabIndex) {
@@ -21,20 +22,21 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     final List<Widget> tabPages = [
       BookshelfPage(),
-      Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_selectedTabIndex',
-              style: Theme.of(context).textTheme.headline4,
-            )
-          ],
-        ),
-      )
+      BookshelfPage(),
+      // Center(
+      //   child: Column(
+      //     mainAxisAlignment: MainAxisAlignment.center,
+      //     children: <Widget>[
+      //       const Text(
+      //         'You have pushed the button this many times:',
+      //       ),
+      //       Text(
+      //         '$_selectedTabIndex',
+      //         style: Theme.of(context).textTheme.headline4,
+      //       )
+      //     ],
+      //   ),
+      // )
     ];
     var bottomNavigationBarItems = <BottomNavigationBarItem>[
       const BottomNavigationBarItem(
@@ -58,13 +60,31 @@ class _HomePageState extends State<HomePage> {
         selectedItemColor: Colors.blue,
         onTap: _onItemTapped,
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          _onItemTapped(0);
-        },
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+      // floatingActionButton: FloatingActionButton(
+      //   onPressed: () {
+      //     _onItemTapped(0);
+      //   },
+      //   tooltip: 'Increment',
+      //   child: const Icon(Icons.add),
+      // ), // This trailing comma makes auto-formatting nicer for build methods.
     );
+  }
+
+  @override
+  void initState() {
+    WidgetsBinding.instance.addObserver(this);
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    printD("_HomePageState", "didChangeAppLifecycleState: $state");
   }
 }

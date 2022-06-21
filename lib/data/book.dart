@@ -1,19 +1,19 @@
 import 'dart:io';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as path;
 import 'package:shosai/main.dart';
-import 'package:shosai/utils/display_util.dart';
+import 'package:shosai/utils/display_util.dart' as display;
 
 /// Description : 书籍
 /// @author zaze
 /// @date 2022/6/5 - 13:03
 class Book {
-  Book(
-      {required this.id,
-      required this.name,
-      required this.extension,
-      required this.localPath});
+  Book({
+    required this.id,
+    required this.name,
+    required this.extension,
+    required this.localPath,
+  });
 
   /// 数据库id, file Uri
   String id;
@@ -30,6 +30,9 @@ class Book {
   /// 编码格式
   String? charset;
 
+  /// 最近访问时间
+  int latestVisitTime = 0;
+
   Book.empty()
       : id = "",
         name = "empty",
@@ -43,9 +46,16 @@ class Book {
         localPath = file.path;
 
   @override
-  String toString() {
-    return 'Book{id: $id, name: $name, localPath: $localPath, extension: $extension, charset: $charset}';
-  }
+  String toString() => '''
+  书籍信息:
+  -------------------
+  id: $id
+  书名: $name
+  本地存储地址: $localPath
+  文件后缀: $extension
+  字符编码: $charset
+  -------------------
+  ''';
 }
 
 /// 书的章节
@@ -96,17 +106,33 @@ class BookChapter {
   }
 }
 
+/// 定义一个全局变量。
+BookConfig bookConfig = BookConfig();
+
+/// 书籍配置
 class BookConfig {
-  BookConfig(this.viewWidth, this.viewHeight);
+  BookConfig._internal(this.viewWidth, this.viewHeight);
+
+  static final BookConfig _instance = BookConfig._internal(0, 0);
+
+  factory BookConfig([double viewWidth = 0, double viewHeight = 0]) {
+    _instance.updateSize(viewWidth, viewHeight);
+    return _instance;
+  }
 
   /// view的宽度(单位相当于android的dp)
-  double viewWidth;
+  double viewWidth = 0.0;
+
   /// view的高度(单位相当于android的dp)
-  double viewHeight;
-  int paddingTop = 0;
-  int paddingBottom = 0;
-  int paddingLeft = 0;
-  int paddingRight = 0;
+  double viewHeight = 0.0;
+
+  /// 内填充边距
+  double paddingTop = 8.0;
+  double paddingBottom = 8.0;
+  double paddingLeft = 8.0;
+  double paddingRight = 8.0;
+
+  double aspectRatio = 1.0;
 
   double get pageWidth {
     return (viewWidth - paddingLeft - paddingRight);
@@ -114,6 +140,12 @@ class BookConfig {
 
   double get pageHeight {
     return (viewHeight - paddingTop - paddingBottom);
+  }
+
+  void updateSize(double viewWidth, double viewHeight) {
+    this.viewWidth = viewWidth;
+    this.viewHeight = viewHeight;
+    aspectRatio = viewWidth / viewHeight;
   }
 
   // double get pageWidthPixel {
@@ -126,23 +158,31 @@ class BookConfig {
 
   /// 创建文本绘制器，用于测量文本
   TextPainter textPainter = TextPainter(
-    locale: Localizations.localeOf(navKey.currentState!.context),
+    // locale: Localizations.localeOf(navKey.currentState!.context),
+    textScaleFactor: display.textScaleFactor,
     maxLines: 1,
     textDirection: TextDirection.ltr,
   );
 
+  /// 标题样式
   TextStyle titleStyle = const TextStyle(
     fontSize: 24,
     fontWeight: FontWeight.bold,
-    backgroundColor: Colors.red,
+    // backgroundColor: Colors.red,
   );
+
+  /// 文本内容样式
   TextStyle textStyle = const TextStyle(
     fontSize: 20,
-    backgroundColor: Colors.blue,
+    // backgroundColor: Colors.blue,
   );
 
   @override
-  String toString() {
-    return 'BookConfig{viewWidth: $viewWidth, viewHeight: $viewHeight, paddingTop: $paddingTop, paddingBottom: $paddingBottom, paddingLeft: $paddingLeft, paddingRight: $paddingRight}';
-  }
+  String toString() => '''
+  书籍配置:
+  -------------------
+  视图大小: $viewWidth/$viewHeight($aspectRatio)
+  视图padding: ($paddingLeft,$paddingTop,$paddingRight,$paddingBottom)
+  -------------------
+  ''';
 }

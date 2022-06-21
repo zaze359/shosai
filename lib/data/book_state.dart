@@ -1,41 +1,35 @@
 import 'package:flutter/cupertino.dart';
 import 'package:shosai/data/book.dart';
-import 'package:shosai/utils/log.dart';
 
 /// 书本的阅读状态
 class BookReadingState {
   BookReadingState(this.book);
 
   Book? book;
-  List<BookChapter> _bookChapters = [];
+  List<BookChapter> bookChapters = [];
 
   /// 当前章节位置
   int chapterIndex = 0;
-
-  set bookChapters(List<BookChapter> value) {
-    MyLog.d("BookReadingState", "set bookChapters: ${value.length}");
-    _bookChapters = value;
-  }
 
   BookChapter? getCurChapter() {
     if (isOver()) {
       return null;
     }
-    return _bookChapters[chapterIndex];
+    return bookChapters[chapterIndex];
   }
 
   BookChapter? getNextChapter() {
     if (isLast()) {
       return null;
     }
-    return _bookChapters[chapterIndex + 1];
+    return bookChapters[chapterIndex + 1];
   }
 
   BookChapter? getPrevChapter() {
     if (isFirst()) {
       return null;
     }
-    return _bookChapters[chapterIndex - 1];
+    return bookChapters[chapterIndex - 1];
   }
 
   /// 移动到下一章节
@@ -58,22 +52,32 @@ class BookReadingState {
     }
   }
 
+  void moveTo(int index) {
+    if (index < 0) {
+      chapterIndex = 0;
+    } else if (index >= bookChapters.length) {
+      chapterIndex = bookChapters.length;
+    } else {
+      chapterIndex = index;
+    }
+  }
+
   bool isFirst() {
     return chapterIndex == 0;
   }
 
   /// 是否是最后一章
   bool isLast() {
-    return chapterIndex == chapterSize - 1;
+    return chapterSize == 0 || chapterIndex == chapterSize - 1;
   }
 
   bool isOver() {
-    return chapterIndex >= _bookChapters.length;
+    return chapterIndex >= bookChapters.length;
   }
 
   /// 章节数量
   int get chapterSize {
-    return _bookChapters.length;
+    return bookChapters.length;
   }
 }
 
@@ -91,6 +95,8 @@ class ChapterState {
   void addPage(PageState pageState) {
     _pages.add(pageState);
   }
+
+  int get chapterIndex => bookChapter?.index ?? 0;
 
   /// 当前章节的第几页
   int pageIndex = 0;
@@ -133,6 +139,21 @@ class ChapterState {
   bool isOver() {
     return pageIndex >= _pages.length;
   }
+
+  /// 到第一页
+  void toFirstPage() {
+    pageIndex = 0;
+  }
+
+  /// 到最后一页
+  void toLastPage() {
+    pageIndex = _pages.length - 1;
+  }
+
+  @override
+  String toString() {
+    return 'ChapterState: ${bookChapter?.title}(${_pages.length} - $pageIndex)';
+  }
 }
 
 /// 阅读页
@@ -142,6 +163,11 @@ class PageState {
   List<PageLine> lines = [];
 
   bool get isNotEmpty => lines.isNotEmpty;
+
+  @override
+  String toString() {
+    return 'PageState{lines: ${lines.isNotEmpty ? lines.first : ""}")}';
+  }
 }
 
 class PageLine {
@@ -150,6 +176,11 @@ class PageLine {
   double height;
 
   PageLine(this.text, {required this.style, required this.height});
+
+  @override
+  String toString() {
+    return 'PageLine{text: $text, height: $height}';
+  }
 }
 
 // /// 段落

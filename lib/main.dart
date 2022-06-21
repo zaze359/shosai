@@ -1,17 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shosai/routes.dart';
-import 'package:shosai/utils/display_util.dart';
+import 'package:shosai/utils/display_util.dart' as display;
 import 'package:shosai/utils/log.dart';
-
 
 void main() {
   runApp(const MyApp());
-  MyLog.d("main",
-      "Display(${Display.physicalWidth}/${Display.physicalHeight})/${Display.devicePixelRatio}");
+  MyLog.d("main", '''
+  Display：
+  physicalWidth：${display.physicalWidth}
+  physicalHeight: ${display.physicalHeight})
+  devicePixelRatio: ${display.devicePixelRatio}
+  textScaleFactor: ${display.textScaleFactor}
+  ''');
   SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(statusBarColor: Colors.transparent));
-  //
+  // WidgetsBinding.instance.addPersistentFrameCallback((timeStamp) {
+  //   MyLog.d("main", "addPersistentFrameCallback: $timeStamp");
+  // });
+  // WidgetsBinding.instance.addTimingsCallback((timeStamp)  {
+  //   MyLog.d("main", "addTimingsCallback: $timeStamp");
+  // });
   // 设置系统状态栏导航栏模式
   // SystemChrome.setEnabledSystemUIMode(
   //     SystemUiMode.manual, overlays: [SystemUiOverlay.top]);
@@ -24,7 +33,6 @@ void main() {
 final navKey = GlobalKey<NavigatorState>();
 
 class MyApp extends StatelessWidget {
-
   const MyApp({super.key});
 
   // This widget is the root of your application.
@@ -38,9 +46,12 @@ class MyApp extends StatelessWidget {
       title: 'Flutter Demo',
       initialRoute: "/",
       theme: ThemeData(
-          primarySwatch: Colors.blue,
-          iconTheme: const IconThemeData(color: Colors.teal),
-          visualDensity: density),
+        brightness: Brightness.light,
+        primaryColor: Colors.blue,
+        // primarySwatch: Colors.blue,
+        iconTheme: const IconThemeData(color: Colors.teal),
+        visualDensity: density,
+      ),
       // routes: RouteConfiguration.routes,
       onGenerateRoute: RouteConfiguration.onGenerateRoute,
     );

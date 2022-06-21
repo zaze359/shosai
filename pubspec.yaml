@@ -40,6 +40,11 @@ dependencies:
   permission_handler: ^9.2.0
   characters: ^1.2.1
   charset: ^1.0.1
+  provider: ^6.0.3
+  event_bus: ^2.0.0
+  device_info_plus: ^3.2.4
+
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -71,7 +76,7 @@ flutter:
   # https://flutter.dev/assets-and-images/#resolution-aware
 
   # For details regarding adding assets from package dependencies, see
-  # https://flutter.dev/assets-and-images/#from-packages
+  # https://flutter.dev/l-and-images/#from-packages
 
   # To add custom fonts to your application, add a fonts section here,
   # in this "flutter" section. Each entry in this list should have a

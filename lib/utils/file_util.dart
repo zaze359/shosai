@@ -151,15 +151,26 @@ class FileService {
   static Stream<String> readByStream(String path,
       {int? start, int? end, String? charset}) {
     try {
-      File file = File(path);
-      if (!file.existsSync()) {
-        return const Stream<String>.empty();
-      }
-      Stream<List<int>> inputStream = file.openRead(start, end);
+      Stream<List<int>> inputStream = openRead(path, start: start, end: end);
       return CharsetDecoder(charset).bind(inputStream);
       // .transform(const LineSplitter());
     } catch (e) {
       return const Stream<String>.empty();
+    }
+  }
+
+  static Stream<List<int>> openRead(String? localPath, {int? start, int? end}) {
+    try {
+      if (localPath == null || localPath.isEmpty) {
+        return const Stream.empty();
+      }
+      File file = File(localPath);
+      if (!file.existsSync()) {
+        return const Stream.empty();
+      }
+      return file.openRead(start, end);
+    } catch (e) {
+      return const Stream.empty();
     }
   }
 

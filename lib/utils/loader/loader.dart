@@ -1,7 +1,8 @@
 import 'package:shosai/data/book.dart';
 import 'package:shosai/data/book_state.dart';
 import 'package:shosai/data/repository/book_repository.dart';
-import 'package:shosai/utils/loader/txt.dart';
+import 'package:shosai/utils/loader/txt_loader.dart';
+import 'package:shosai/utils/reg_exp.dart' as reg_exp;
 
 import '../log.dart';
 
@@ -10,40 +11,63 @@ class BookLoader {
 
   BookLoader(this._book);
 
-  BookConfig config = BookConfig(0, 0);
-
   /// 文本加载器
-  late final TxtLoader _fileLoader = TxtLoader(_book, config);
+  late final TxtLoader _fileLoader = TxtLoader(_book, bookConfig);
   late final BookRepository _bookRepository = BookRepository();
 
+  final Set<int> _loadingChapter = {};
+
+  Future<int> clearBookChapters() async {
+    return await _bookRepository.clearBookChapters(_book.id);
+  }
+
   Future<BookReadingState> initBook() async {
+    MyLog.d("BookLoader", "initBook start ${_book.name}");
     BookReadingState readingState = BookReadingState(_book);
     List<BookChapter> bookChapters =
         await _bookRepository.queryBookChapters(_book.id);
     if (bookChapters.isEmpty) {
       String localPath = _book.localPath;
-      MyLog.d("BookLoader",
-          "initBook from local ${_book.name}(${_book.charset}) /$localPath");
+      MyLog.d("BookLoader", "initBook from local $localPath");
       if (localPath.isEmpty) {
         return readingState;
       }
-      bookChapters = await _fileLoader.matchChapters();
+      for (var regExp in reg_exp.tocRegExpList) {
+        MyLog.d("BookLoader", "initBook regExp：$regExp");
+        // 若匹配的章节过少则，换一个规则重新匹配。
+        bookChapters = await _fileLoader.matchChapters(regExp);
+        if (bookChapters.length > 3) {
+          break;
+        }
+        // else if (bookChapters.isNotEmpty &&
+        //     bookChapters[bookChapters.length - 1].charEnd < 524288) {
+        //   // 虽然仅有几章，但是内容不多，不考虑重新匹配。
+        //   break;
+        // }
+      }
       await _bookRepository.insertChapters(bookChapters);
-      await _bookRepository.insertBook(_book);
+      await _bookRepository.insertOrUpdateBook(_book);
     } else {
-      MyLog.d(
-          "BookLoader", "initBook from db ${_book.name}(${_book.charset})");
+      MyLog.d("BookLoader", "initBook from db");
     }
     readingState.bookChapters = bookChapters;
+    MyLog.d("BookLoader", "initBook end ${_book.name}(${_book.charset})");
     return readingState;
   }
 
   /// 加载章节状态
   Future<ChapterState> loadChapter(BookChapter? chapter) async {
+    MyLog.d("BookLoader", "loadChapter start: $chapter");
     if (chapter == null) {
       return ChapterState(chapter);
     }
-    return await _fileLoader.loadChapterContent(chapter);
+    _loadingChapter.add(chapter.index);
+    // await Future.delayed(Duration(milliseconds: 2000));
+    return _fileLoader.loadChapterContent(chapter).then((value) {
+      MyLog.d("BookLoader", "loadChapter end: $chapter");
+      _loadingChapter.remove(chapter.index);
+      return value;
+    });
   }
 
 // fun loadPrePage()
@@ -65,15 +89,12 @@ abstract class ChapterLoader {
 
   /// 匹配章节
   /// 将书籍内容按照章节拆分开
-  Future<List<BookChapter>> matchChapters();
+  Future<List<BookChapter>> matchChapters(RegExp regExp);
 
   /// 加载指定章节内容
   /// 将章节内容分页
   /// 页内分行
   Future<ChapterState> loadChapterContent(BookChapter chapter);
-
-  /// 若存在章节标题则返回标题内容，不存在则返回null
-  String? matchTitle(String line);
 }
 
 class PageLoader {

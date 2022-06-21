@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:convert' as cvt;
 
 import 'package:charset/charset.dart' as charset_util;
+import 'package:charset/charset.dart';
+import 'package:shosai/utils/log.dart';
 
 /// 字符编解码器
 class CharsetCodec extends cvt.Encoding {
@@ -19,6 +21,8 @@ class CharsetCodec extends cvt.Encoding {
   /// UTF-32BE： 前两个字节 0xFE 0xFF 0x00 0x00
   static const utf32be = "UTF-32BE";
 
+  static const gbk = "gbk";
+
   CharsetCodec(this.charset);
 
   String charset;
@@ -33,9 +37,9 @@ class CharsetCodec extends cvt.Encoding {
   String get name => charset;
 
   ///
-  static String matchCharset(List<int>? charCodes) {
+  static String? matchCharset(List<int>? charCodes) {
     if (charCodes == null) {
-      return utf8;
+      return null;
     }
     if (charset_util.hasUtf16LeBom(charCodes)) {
       return utf16le;
@@ -45,6 +49,8 @@ class CharsetCodec extends cvt.Encoding {
       return utf32le;
     } else if (charset_util.hasUtf32beBom(charCodes)) {
       return utf32be;
+    } else if (Charset.canDecode(charset_util.gbk, charCodes)) {
+      return gbk;
     } else {
       return utf8;
     }
@@ -64,14 +70,14 @@ class CharsetEncoder {
 
   DefaultEncoder _getEncoder(String? charset) {
     switch (charset) {
-      case CharsetCodec.utf8:
-        return _Utf8Encoder();
       case CharsetCodec.utf16le:
         return _Utf16LeEncoder();
       case CharsetCodec.utf16be:
         return _Utf16BeEncoder();
       case CharsetCodec.utf32le:
         return _Utf32LeEncoder();
+      case CharsetCodec.gbk:
+        return _GBKEncoder();
       case CharsetCodec.utf32be:
         return _Utf32BeEncoder();
       default:
@@ -104,14 +110,21 @@ class CharsetDecoder {
     return _decoder ?? _getDecoder(charset);
   }
 
+  void initCharset(List<int> codeList) {
+    if (charset?.isNotEmpty != true) {
+      charset = CharsetCodec.matchCharset(codeList);
+      printD("CharsetDecoder", "initCharset $charset : ${codeList.length}");
+    }
+  }
+
   DefaultDecoder _getDecoder(String? charset) {
     switch (charset) {
-      case CharsetCodec.utf8:
-        return _Utf8Decoder();
       case CharsetCodec.utf16le:
         return _Utf16LeDecoder();
       case CharsetCodec.utf16be:
         return _Utf16BeDecoder();
+      case CharsetCodec.gbk:
+        return _GBKDecoder();
       case CharsetCodec.utf32le:
         return _Utf32LeDecoder();
       case CharsetCodec.utf32be:
@@ -126,9 +139,9 @@ class CharsetDecoder {
   }
 
   String convert(List<int> input) {
-    charset ??= CharsetCodec.matchCharset(input);
+    initCharset(input);
     _decoder ??= _getDecoder(charset);
-    return _decoder!.convert(input);
+    return _decoder?.convert(input) ?? "";
   }
 
   String decode(List<int> input) {
@@ -206,12 +219,13 @@ class _Utf16LeEncoder extends DefaultEncoder {
   }
 }
 
-/// Utf16Le Decoder
+/// Utf16Be Decoder
 class _Utf16BeDecoder extends DefaultDecoder {
   _Utf16BeDecoder() : super(const charset_util.Utf16Decoder());
 
   @override
   String convert(List<int> input) {
+    printD("_Utf16BeDecoder", "input: $input");
     return (decoder as charset_util.Utf16Decoder).decodeUtf16Be(input);
   }
 }
@@ -267,5 +281,24 @@ class _Utf32BeEncoder extends DefaultEncoder {
   @override
   List<int> convert(String input) {
     return (encoder as charset_util.Utf32Encoder).encodeUtf32Be(input);
+  }
+}
+
+/// gbk Decoder
+class _GBKDecoder extends DefaultDecoder {
+  _GBKDecoder() : super(const GbkDecoder(allowMalformed: true));
+
+  @override
+  String convert(List<int> input) {
+    return (decoder as charset_util.GbkDecoder).convert(input);
+  }
+}
+
+class _GBKEncoder extends DefaultEncoder {
+  _GBKEncoder() : super(charset_util.gbk.encoder);
+
+  @override
+  List<int> convert(String input) {
+    return (encoder as charset_util.GbkEncoder).convert(input);
   }
 }

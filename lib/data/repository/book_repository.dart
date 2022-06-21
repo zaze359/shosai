@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 import 'package:shosai/data/book.dart';
-import 'package:shosai/data/sqlite_base.dart';
+import 'package:shosai/data/database.dart';
 import 'package:shosai/utils/log.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -11,6 +11,12 @@ class BookRepository {
   Database? _database;
   final BookTable _bookTable = BookTable();
   final BookChapterTable _bookChapterTable = BookChapterTable();
+  late List<Migration> migrations = [
+    // Migration(3, 4, migrate: (db) {
+    //   return db.execute(
+    //       "ALTER TABLE ${_bookTable.getTableName()} ADD latest_visit_time INTEGER");
+    // }),
+  ];
 
   Future<Database> _openDb() async {
     WidgetsFlutterBinding.ensureInitialized();
@@ -33,12 +39,12 @@ class BookRepository {
       //   MyLog.d("BookRepository", "onConfigure ${db.path}");
       // },
       onUpgrade: (db, oldVersion, newVersion) async {
-        // TODO 数据迁移
         MyLog.d("BookRepository",
             "onUpgrade: ${db.path} ---- $oldVersion >> $newVersion");
         // onDatabaseDowngradeDelete(db, oldVersion, newVersion);
         await _dropTables(db);
         await _createTables(db);
+        await updateTables(db, oldVersion, newVersion, migrations);
       },
       onDowngrade: (db, oldVersion, newVersion) async {
         MyLog.d("BookRepository",
@@ -47,7 +53,7 @@ class BookRepository {
         await _dropTables(db);
         await _createTables(db);
       },
-      version: 3,
+      version: 4,
     );
     return _database!;
   }
@@ -64,12 +70,13 @@ class BookRepository {
 
   // --------------------------------------------------
 
-  Future<void> insertBook(Book book) async {
-    await _bookTable.insert(await _openDb(), book);
+  Future<void> insertOrUpdateBook(Book book) async {
+    await _bookTable.insertOrUpdate(await _openDb(), book);
   }
 
   Future<List<Book>> queryAllBooks() async {
-    return _bookTable.queryAll(await _openDb());
+    return await _bookTable.queryAll(await _openDb(),
+        orderBy: 'latest_visit_time desc');
   }
 
   Future<void> insertChapters(List<BookChapter> chapters) async {
@@ -77,9 +84,14 @@ class BookRepository {
   }
 
   Future<List<BookChapter>> queryBookChapters(String bookId) async {
-    return _bookChapterTable.queryAll(await _openDb(), where: "WHERE bookId='$bookId'");
+    return await _bookChapterTable
+        .queryAll(await _openDb(), where: 'bookId = ?', whereArgs: [bookId]);
   }
 
+  Future<int> clearBookChapters(String bookId) async {
+    return await _bookChapterTable
+        .delete(await _openDb(), where: 'bookId = ?', whereArgs: [bookId]);
+  }
 }
 
 /// 书籍表
@@ -91,7 +103,7 @@ class BookTable extends BaseTable<Book> {
 
   @override
   String getColumnSql() {
-    return "(id TEXT PRIMARY KEY, name TEXT, extension TEXT, local_path TEXT, charset TEXT)";
+    return "(id TEXT PRIMARY KEY, name TEXT, extension TEXT, local_path TEXT, charset TEXT, latest_visit_time INTEGER)";
   }
 
   @override
@@ -114,6 +126,7 @@ class BookTable extends BaseTable<Book> {
       'extension': value.extension,
       'local_path': value.localPath,
       'charset': value.charset,
+      'latest_visit_time': value.latestVisitTime,
     };
   }
 }
