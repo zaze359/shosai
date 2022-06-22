@@ -138,12 +138,12 @@ class TxtLoader extends ChapterLoader {
       curHeight += line.height;
       if (curHeight >= maxHeight) {
         chapterState.addPage(pageState);
-        MyLog.i(
-            "line space: $chapterState >> ${maxHeight - curHeight + line.height}");
+        // MyLog.i(
+        //     "line space: $chapterState >> ${maxHeight - curHeight + line.height}");
         pageState = PageState();
         curHeight = line.height;
       }
-      MyLog.d("loadChapterContent", "line: ${line.text}");
+      // MyLog.d("loadChapterContent", "line: ${line.text}");
       pageState.lines.add(line);
     }
     if (pageState.isNotEmpty) {
@@ -182,11 +182,14 @@ class TxtLoader extends ChapterLoader {
     }
     measure(textPainter, line, style, maxWidth);
     // MyLog.d(
-    //     "findLineEdge: maxWidth:$maxWidth; style.fontSize:${style.fontSize}; maxLength: $maxLength; edgeIndex: $edgeIndex; line: $line;");
+    //     "findLineEdge: maxWidth:$maxWidth; style.fontSize:${style.fontSize}; maxLength: $maxLength; edgeIndex: $edgeIndex;");
     if (textPainter.didExceedMaxLines) {
       // 大致定位文本边界：实际文本宽度/最大宽度
       edgeIndex = line.length * maxWidth ~/ textPainter.minIntrinsicWidth;
-      // MyLog.d("loadChapterContent", "----------------------------------------");
+      // MyLog.d(
+      //     "findLineEdge: edgeIndex: $edgeIndex;");
+      measure(textPainter, line.substring(0, edgeIndex), style, maxWidth);
+      await frameCross.doDelay();
       if (!textPainter.didExceedMaxLines) {
         // 没有超出宽度, 并且未到边界， 则尝试往后增加字符
         while (!textPainter.didExceedMaxLines && edgeIndex < line.length) {

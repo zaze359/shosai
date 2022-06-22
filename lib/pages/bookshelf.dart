@@ -201,16 +201,8 @@ class _BookGridItem extends StatelessWidget {
 
   final Book _book;
 
-  //
-  // void _openBook(BuildContext context) {
-  //   MyLog.d("_BookItem", "_openBook: ${_book.name}");
-  //   AppRoutes.pushBookReaderPage(context, _book);
-  //   _BookshelfNotification(_book).dispatch(context);
-  // }
-
   @override
   Widget build(BuildContext context) {
-    MyLog.d("_BookGridItem", "build");
     return GestureDetector(
       onTap: () {
         _BookshelfContainer.of(context).openBook(context, _book);
