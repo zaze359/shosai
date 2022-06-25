@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as path;
-import 'package:shosai/main.dart';
 import 'package:shosai/utils/display_util.dart' as display;
 
 /// Description : 书籍
@@ -30,8 +29,11 @@ class Book {
   /// 编码格式
   String? charset;
 
-  /// 最近访问时间
+  /// 最近访问时间 ms
   int latestVisitTime = 0;
+
+  /// 导入时间ms
+  int importTime = 0;
 
   Book.empty()
       : id = "",
@@ -43,7 +45,8 @@ class Book {
       : id = file.uri.toString(),
         name = path.basenameWithoutExtension(file.path),
         extension = path.extension(file.path),
-        localPath = file.path;
+        localPath = file.path,
+        importTime = DateTime.now().millisecondsSinceEpoch;
 
   @override
   String toString() => '''
@@ -157,17 +160,18 @@ class BookConfig {
   // }
 
   /// 创建文本绘制器，用于测量文本
-  TextPainter textPainter = TextPainter(
-    // locale: Localizations.localeOf(navKey.currentState!.context),
-    textScaleFactor: display.textScaleFactor,
-    maxLines: 1,
-    textDirection: TextDirection.ltr,
-  );
+  TextPainter get textPainter => TextPainter(
+        // locale: Localizations.localeOf(navKey.currentState!.context),
+        textScaleFactor: display.textScaleFactor,
+        maxLines: 1,
+        textDirection: TextDirection.ltr,
+      );
 
   /// 标题样式
   TextStyle titleStyle = const TextStyle(
     fontSize: 24,
     fontWeight: FontWeight.bold,
+    height: 2,
     // backgroundColor: Colors.red,
   );
 

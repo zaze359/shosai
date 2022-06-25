@@ -14,22 +14,22 @@ class BookRepository {
   late List<Migration> migrations = [
     // Migration(3, 4, migrate: (db) {
     //   return db.execute(
-    //       "ALTER TABLE ${_bookTable.getTableName()} ADD latest_visit_time INTEGER");
+    //       "ALTER TABLE ${_bookTable.getTableName()} ADD latestVisitTime INTEGER");
     // }),
   ];
 
   Future<Database> _openDb() async {
     WidgetsFlutterBinding.ensureInitialized();
     if (_database?.isOpen == true) {
-      MyLog.d("BookRepository", "${_database?.path} isOpened");
+      // MyLog.d("BookRepository", "${_database?.path} isOpened");
       return _database!;
     }
     String path = join(await getDatabasesPath(), _dbName);
-    MyLog.d("BookRepository", "openDatabase: $path");
+    // MyLog.d("BookRepository", "openDatabase: $path");
     _database = await openDatabase(
       path,
       onCreate: (db, version) {
-        MyLog.d("BookRepository", "onCreate: $version");
+        // MyLog.d("BookRepository", "onCreate: $version");
         return _createTables(db);
       },
       // onOpen: (db) {
@@ -70,26 +70,32 @@ class BookRepository {
 
   // --------------------------------------------------
 
-  Future<void> insertOrUpdateBook(Book book) async {
-    await _bookTable.insertOrUpdate(await _openDb(), book);
+  Future<int> insertOrUpdateBook(Book book) async {
+    return _bookTable.insertOrUpdate(await _openDb(), book);
+  }
+
+  Future<int> deleteBook(Book book) async {
+    await clearBookChapters(book.id);
+    return _bookTable
+        .delete(await _openDb(), where: "id = ?", whereArgs: [book.id]);
   }
 
   Future<List<Book>> queryAllBooks() async {
-    return await _bookTable.queryAll(await _openDb(),
-        orderBy: 'latest_visit_time desc');
+    return _bookTable.queryAll(await _openDb(),
+        orderBy: 'latestVisitTime desc');
   }
 
-  Future<void> insertChapters(List<BookChapter> chapters) async {
-    await _bookChapterTable.batchInsert(await _openDb(), chapters);
+  Future<List<Object?>> insertChapters(List<BookChapter> chapters) async {
+    return _bookChapterTable.batchInsert(await _openDb(), chapters);
   }
 
   Future<List<BookChapter>> queryBookChapters(String bookId) async {
-    return await _bookChapterTable
+    return _bookChapterTable
         .queryAll(await _openDb(), where: 'bookId = ?', whereArgs: [bookId]);
   }
 
   Future<int> clearBookChapters(String bookId) async {
-    return await _bookChapterTable
+    return _bookChapterTable
         .delete(await _openDb(), where: 'bookId = ?', whereArgs: [bookId]);
   }
 }
@@ -103,7 +109,7 @@ class BookTable extends BaseTable<Book> {
 
   @override
   String getColumnSql() {
-    return "(id TEXT PRIMARY KEY, name TEXT, extension TEXT, local_path TEXT, charset TEXT, latest_visit_time INTEGER)";
+    return "(id TEXT PRIMARY KEY, name TEXT, extension TEXT, localPath TEXT, charset TEXT, latestVisitTime INTEGER, importTime INTEGER)";
   }
 
   @override
@@ -112,9 +118,11 @@ class BookTable extends BaseTable<Book> {
       id: map['id'] ?? "",
       name: map['name'] ?? "",
       extension: map['extension'] ?? ".txt",
-      localPath: map['local_path'] ?? "",
+      localPath: map['localPath'] ?? "",
     );
     book.charset = map['charset'];
+    book.latestVisitTime = map['latestVisitTime'] ?? 0;
+    book.importTime = map['importTime'] ?? 0;
     return book;
   }
 
@@ -124,9 +132,10 @@ class BookTable extends BaseTable<Book> {
       'id': value.id,
       'name': value.name,
       'extension': value.extension,
-      'local_path': value.localPath,
+      'localPath': value.localPath,
       'charset': value.charset,
-      'latest_visit_time': value.latestVisitTime,
+      'latestVisitTime': value.latestVisitTime,
+      'importTime': value.importTime,
     };
   }
 }
@@ -135,7 +144,7 @@ class BookTable extends BaseTable<Book> {
 class BookChapterTable extends BaseTable<BookChapter> {
   @override
   String getColumnSql() {
-    return "(id TEXT PRIMARY KEY, bookId TEXT, _index INTEGER, title TEXT, char_start INTEGER, char_end INTEGER)";
+    return "(id TEXT PRIMARY KEY, bookId TEXT, _index INTEGER, title TEXT, charStart INTEGER, charEnd INTEGER)";
   }
 
   @override
@@ -149,8 +158,8 @@ class BookChapterTable extends BaseTable<BookChapter> {
       bookId: map['bookId'] ?? "",
       index: map['_index'] ?? 0,
       title: map['title'] ?? "",
-      charStart: map['char_start'] ?? 0,
-      charEnd: map['char_end'] ?? 0,
+      charStart: map['charStart'] ?? 0,
+      charEnd: map['charEnd'] ?? 0,
     );
   }
 
@@ -161,8 +170,8 @@ class BookChapterTable extends BaseTable<BookChapter> {
       'bookId': value.bookId,
       '_index': value.index,
       'title': value.title,
-      'char_start': value.charStart,
-      'char_end': value.charEnd
+      'charStart': value.charStart,
+      'charEnd': value.charEnd
     };
   }
 }

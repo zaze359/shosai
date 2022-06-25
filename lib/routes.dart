@@ -33,12 +33,7 @@ class RouteConfiguration {
   static final Map<String, WidgetBuilder> _routes = {
     AppRoutes._homePage: (context) => const HomePage(),
     // AppRoutes._bookReaderPage: (context) => BookReaderPage(),
-    AppRoutes._bookReaderPage: (context) => MultiProvider(
-          providers: [
-            ChangeNotifierProvider(create: (_) => ReadCache()),
-          ],
-          child: const BookReaderPage(),
-        ),
+    AppRoutes._bookReaderPage: (context) => const BookReaderPage(),
     AppRoutes._bookTocPage: (context) => BookTocPage(),
   };
 

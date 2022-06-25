@@ -3,13 +3,10 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:charset/charset.dart';
-import 'package:flutter_test/flutter_test.dart';
 import 'package:shosai/utils/charsets.dart';
 import 'package:shosai/utils/file_util.dart';
 
 void main() async {
-  // String decoded = gbk
-  //     .decode([0xA1, 0xE8, 0xA1, 0xEC, 0xA1, 0xA7, 0xA1, 0xE3, 0xA1, 0xC0]);
   List<int> chars = [
     0xA1,
     0xA1,
@@ -37,6 +34,8 @@ void main() async {
   print("matchCharset: ${File("test/chars.txt").absolute.path}");
   Stream<List<int>> stream = FileService.openRead("test/chars.txt");
   chars.clear();
+
+
   await for (var e in stream) {
     chars.addAll(e);
   }

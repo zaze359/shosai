@@ -38,7 +38,6 @@ class TxtLoader extends ChapterLoader {
     // 计算密集型，放isolate中处理。
     MapEntry<String?, List<BookChapter>> result =
         await compute(_codesMapToBookChapters, MapEntry(codeList, regExp));
-    // codesMapToBookChapters(MapEntry(codeList, regExp));
     // 修改一下书本的字符
     book.charset = result.key;
     return result.value.map((e) {
@@ -53,24 +52,29 @@ class TxtLoader extends ChapterLoader {
     Stream<List<int>> stream = FileService.openRead(book.localPath,
         start: chapter.charStart, end: chapter.charEnd);
     // MyLog.d("loadChapterContent", "_readFileContent end: $chapter");
-    ChapterState chapterState = ChapterState(chapter);
+    ChapterState chapterState =
+        ChapterState(book.name, chapter.title, chapter.index);
     List<PageLine> pageLines = [];
     TextPainter textPainter = config.textPainter;
     TextStyle style;
     double maxWidth = config.pageWidth;
     CharsetDecoder decoder = CharsetDecoder(book.charset);
+    List<int> codeList = [];
+    await for (List<int> element in stream) {
+      codeList.addAll(element);
+    }
+    decoder.initCharset(codeList);
     if (debug.loadChapterLog) {
       MyLog.d("TxtLoader",
           "loadChapterContent: ${decoder.charset} (${chapter.charStart}/${chapter.charEnd})");
     }
-    List<String> contentLines =
-        await (decoder.bind(stream).transform(const LineSplitter()).toList());
+    Iterable<String> iterable = LineSplitter.split(decoder.convert(codeList));
     if (debug.loadChapterLog) {
       MyLog.d("TxtLoader",
-          "loadChapterContent contentLines.length ${contentLines.length}");
+          "loadChapterContent contentLines.length ${iterable.length}");
     }
     FrameCross frameCross = FrameCross();
-    for (String line in contentLines) {
+    for (String line in iterable) {
       // --------------------------------------------
       if (pageLines.isEmpty) {
         // 第一行。是标题
@@ -108,7 +112,7 @@ class TxtLoader extends ChapterLoader {
         MyLog.d("TxtLoader",
             "loadChapterContent splitLine.length：${splitLine.length}");
       }
-      // TODO 需要处理一行但是，这一行长度很大的情况。
+      // TODO 需要处理仅有一行但是这一行长度很大的情况。
       while (edgeIndex < line.length) {
         edgeIndex = edgeIndex +
             await findLineEdge(
@@ -119,7 +123,9 @@ class TxtLoader extends ChapterLoader {
                 frameCross: frameCross);
         // TODO 需要处理分割后的空白部分
         pageLines.add(PageLine(line.substring(startIndex, edgeIndex),
-            style: style, height: textPainter.height));
+            style: style,
+            height: textPainter.height,
+            isTitle: pageLines.isEmpty));
         if (edgeIndex == line.length) {
           break;
         }
@@ -133,21 +139,28 @@ class TxtLoader extends ChapterLoader {
     // 分页
     double maxHeight = config.pageHeight;
     double curHeight = 0;
-    PageState pageState = PageState();
+    PageState pageState = PageState.fromChapter(0, chapterState);
     for (PageLine line in pageLines) {
       curHeight += line.height;
       if (curHeight >= maxHeight) {
         chapterState.addPage(pageState);
         // MyLog.i(
         //     "line space: $chapterState >> ${maxHeight - curHeight + line.height}");
-        pageState = PageState();
+        pageState =
+            PageState.fromChapter(chapterState.pages.length, chapterState);
         curHeight = line.height;
       }
       // MyLog.d("loadChapterContent", "line: ${line.text}");
       pageState.lines.add(line);
     }
     if (pageState.isNotEmpty) {
+      // 最后一页，默认将空白部分放最下面即可。
+      pageState.mainAxisAlignment = MainAxisAlignment.start;
       chapterState.addPage(pageState);
+    }
+    int size = chapterState.pages.length;
+    for (var element in chapterState.pages) {
+      element.chapterSize = size;
     }
     return chapterState;
   }
@@ -179,17 +192,22 @@ class TxtLoader extends ChapterLoader {
       // 文字过多， 直接截断
       line = line.substring(0, maxLength);
       edgeIndex = maxLength;
+      if (debug.matchChaptersLog) {
+        MyLog.d(
+            "findLineEdge: 文字过多， 直接截断 maxLength: $maxLength; edgeIndex: $edgeIndex; line: $line");
+      }
     }
     measure(textPainter, line, style, maxWidth);
-    // MyLog.d(
-    //     "findLineEdge: maxWidth:$maxWidth; style.fontSize:${style.fontSize}; maxLength: $maxLength; edgeIndex: $edgeIndex;");
+    if (debug.matchChaptersLog) {
+      MyLog.d(
+          "findLineEdge: style.fontSize:${style.fontSize}; maxLength: $maxLength; edgeIndex: $edgeIndex;");
+      MyLog.d(
+          "findLineEdge: maxWidth:$maxWidth;  minIntrinsicWidth: ${textPainter.minIntrinsicWidth}/${textPainter.maxIntrinsicWidth} : didExceedMaxLines: ${textPainter.didExceedMaxLines}");
+    }
     if (textPainter.didExceedMaxLines) {
       // 大致定位文本边界：实际文本宽度/最大宽度
       edgeIndex = line.length * maxWidth ~/ textPainter.minIntrinsicWidth;
-      // MyLog.d(
-      //     "findLineEdge: edgeIndex: $edgeIndex;");
       measure(textPainter, line.substring(0, edgeIndex), style, maxWidth);
-      await frameCross.doDelay();
       if (!textPainter.didExceedMaxLines) {
         // 没有超出宽度, 并且未到边界， 则尝试往后增加字符
         while (!textPainter.didExceedMaxLines && edgeIndex < line.length) {

@@ -1,9 +1,6 @@
 import 'dart:io';
 import 'dart:math';
-
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:path/path.dart' as path;
 import 'package:shosai/data/book.dart';
 import 'package:shosai/data/repository/book_repository.dart';
 import 'package:shosai/routes.dart';
@@ -42,7 +39,18 @@ class _BookshelfPageState extends State<BookshelfPage> {
   }
 
   Future<void> _updateBook(Book book) async {
+    book.latestVisitTime = DateTime.now().millisecondsSinceEpoch;
+    // MyLog.d("_BookItem", "_openBook: ${book.name}");
     await widget._bookRepository.insertOrUpdateBook(book);
+    _refreshBookshelf();
+  }
+
+  Future<void> _deleteBook(Book book, bool deleteFile) async {
+    // MyLog.d("_BookItem", "_deleteBook: ${book.name}; deleteFile: $deleteFile");
+    await widget._bookRepository.deleteBook(book);
+    if (deleteFile) {
+      FileService.deleteFile(book.localPath);
+    }
     _refreshBookshelf();
   }
 
@@ -102,7 +110,8 @@ class _BookshelfPageState extends State<BookshelfPage> {
 
   Widget _showBookshelf(List<Book>? books) {
     return _BookshelfContainer(
-      bookRepository: widget._bookRepository,
+      updateFunc: _updateBook,
+      deleteFunc: _deleteBook,
       child: (books == null || books.isEmpty)
           ? _empty()
           : RefreshIndicator(
@@ -147,13 +156,12 @@ class _BookshelfPageState extends State<BookshelfPage> {
   void _importBookFormLocal() async {
     List<File> files = await imports.importBookFormLocal();
     for (File element in files) {
-      if (Platform.isIOS) { // IOS拷贝
+      if (Platform.isIOS) {
+        // IOS拷贝
         // TODO 需要优化处理，相名文件的处理
         Directory newDir = await FileService.supportDir();
         String newPath = element.absolute.path
             .replaceAll(element.parent.absolute.path, newDir.absolute.path);
-        MyLog.i(
-            "newPath: ${newPath}");
         widget._bookRepository
             .insertOrUpdateBook(Book.formFile(await element.copy(newPath)));
       } else {
@@ -165,9 +173,14 @@ class _BookshelfPageState extends State<BookshelfPage> {
 }
 
 class _BookshelfContainer extends InheritedWidget {
-  BookRepository bookRepository;
 
-  _BookshelfContainer({required super.child, required this.bookRepository});
+  Function(Book) updateFunc;
+  Function(Book, bool) deleteFunc;
+
+  _BookshelfContainer(
+      {required super.child,
+      required this.updateFunc,
+      required this.deleteFunc});
 
   static _BookshelfContainer of(BuildContext context) =>
       context.dependOnInheritedWidgetOfExactType<_BookshelfContainer>()!;
@@ -177,15 +190,17 @@ class _BookshelfContainer extends InheritedWidget {
       .widget as _BookshelfContainer;
 
   openBook(BuildContext context, Book book) {
-    MyLog.d("_BookItem", "_openBook: ${book.name}");
+    updateFunc(book);
     AppRoutes.pushBookReaderPage(context, book);
-    book.latestVisitTime = DateTime.now().millisecondsSinceEpoch;
-    _BookshelfNotification(book).dispatch(context);
+  }
+
+  deleteBook(Book book, bool deleteFile) {
+    deleteFunc(book, deleteFile);
   }
 
   @override
   bool updateShouldNotify(_BookshelfContainer oldWidget) {
-    return bookRepository != oldWidget.bookRepository;
+    return true;
   }
 }
 
@@ -208,7 +223,13 @@ class _BookGridItem extends StatelessWidget {
         _BookshelfContainer.of(context).openBook(context, _book);
       },
       onLongPress: () {
-        MyLog.d("_BookItem", "onLongPress: ${_book.name}");
+        showDialog(
+          context: context,
+          builder: (_) => _DeleteBookDialog(_book, (bool deleteFile) {
+            // dialog 中的
+            _BookshelfContainer.get(context).deleteFunc(_book, deleteFile);
+          }),
+        );
       },
       child: Column(
         children: [
@@ -226,19 +247,75 @@ class _BookGridItem extends StatelessWidget {
               ),
             ),
           ),
-          // Center(
-          //   child: Padding(
-          //     padding: EdgeInsets.all(4),
-          //     child: Text(
-          //       _book.name,
-          //       maxLines: 2,
-          //       overflow: TextOverflow.ellipsis,
-          //       style: TextStyle(fontSize: 18),
-          //     ),
-          //   ),
-          // ),
         ],
       ),
+    );
+  }
+}
+
+class _DeleteBookDialog extends StatelessWidget {
+  _DeleteBookDialog(this._book, this.deleteFunc);
+
+  Book _book;
+  bool _deleteFile = false;
+  Function(bool) deleteFunc;
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(_book.name),
+      contentPadding: const EdgeInsets.fromLTRB(24.0, 20.0, 24.0, 0.0),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text("确认删除?"),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(0, 16, 0, 0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                const Text(
+                  "从设备上删除源文件",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(),
+                  strutStyle: StrutStyle(
+                    forceStrutHeight: true,
+                  ),
+                ),
+                StatefulBuilder(builder: (context, setState) {
+                  return Checkbox(
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(1.0)),
+                    ),
+                    value: _deleteFile,
+                    onChanged: (bool? value) {
+                      setState(() {
+                        _deleteFile = value == true;
+                      });
+                    },
+                  );
+                }),
+              ],
+            ),
+          )
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+          child: const Text("取消"),
+        ),
+        TextButton(
+          onPressed: () {
+            deleteFunc(_deleteFile);
+            Navigator.of(context).pop();
+          },
+          child: const Text("删除"),
+        ),
+      ],
     );
   }
 }

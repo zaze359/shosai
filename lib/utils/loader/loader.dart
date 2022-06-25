@@ -21,9 +21,9 @@ class BookLoader {
     return await _bookRepository.clearBookChapters(_book.id);
   }
 
-  Future<BookReadingState> initBook() async {
+  Future<BookState> initBook() async {
     MyLog.d("BookLoader", "initBook start ${_book.name}");
-    BookReadingState readingState = BookReadingState(_book);
+    BookState readingState = BookState(_book);
     List<BookChapter> bookChapters =
         await _bookRepository.queryBookChapters(_book.id);
     if (bookChapters.isEmpty) {
@@ -56,15 +56,14 @@ class BookLoader {
   }
 
   /// 加载章节状态
-  Future<ChapterState> loadChapter(BookChapter? chapter) async {
-    MyLog.d("BookLoader", "loadChapter start: $chapter");
+  Future<ChapterState?> loadChapter(BookChapter? chapter) async {
+    // MyLog.d("BookLoader", "loadChapter start: $chapter");
     if (chapter == null) {
-      return ChapterState(chapter);
+      return null;
     }
     _loadingChapter.add(chapter.index);
-    // await Future.delayed(Duration(milliseconds: 2000));
     return _fileLoader.loadChapterContent(chapter).then((value) {
-      MyLog.d("BookLoader", "loadChapter end: $chapter");
+      // MyLog.d("BookLoader", "loadChapter end: $chapter");
       _loadingChapter.remove(chapter.index);
       return value;
     });

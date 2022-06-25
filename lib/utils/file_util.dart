@@ -208,6 +208,25 @@ class FileService {
     }
     return file.writeAsString(content);
   }
+
+  /// write [content] into [path] file。
+  static Future<bool> deleteFile(String path,
+      {bool externalStorage = false, bool manageExternal = false}) async {
+    File file = File(path);
+    if (!await checkPermission(
+        externalStorage: externalStorage, manageExternal: manageExternal)) {
+      return false;
+    }
+    try {
+      if (file.existsSync()) {
+        await file.delete();
+        return true;
+      }
+    } catch (e) {
+      return false;
+    }
+    return true;
+  }
 }
 
 enum DirectoryType {
