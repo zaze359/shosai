@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shosai/data/book.dart';
+import 'package:shosai/data/book_config.dart';
 import 'package:shosai/data/book_state.dart';
 import 'package:shosai/utils/controller.dart';
 import 'package:shosai/utils/custom_event.dart';

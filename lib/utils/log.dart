@@ -3,6 +3,10 @@ void printD([String? tag, Object? msg]) {
   MyLog.d(tag, msg);
 }
 
+void bookSourceLog(String? message) {
+  MyLog.d("bookSource", message);
+}
+
 class MyLog {
   /// 此日志一直输出。
   static void i([String? tag, Object? msg]) {
@@ -25,7 +29,7 @@ class MyLog {
   static void _v(String? tag, Object? msg) {
     if (tag == null) {
       print("$msg");
-    } else if(msg == null){
+    } else if (msg == null) {
       print("$tag");
     } else {
       print("$tag: $msg");

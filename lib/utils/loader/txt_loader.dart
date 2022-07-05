@@ -53,7 +53,7 @@ class TxtLoader extends ChapterLoader {
         start: chapter.charStart, end: chapter.charEnd);
     // MyLog.d("loadChapterContent", "_readFileContent end: $chapter");
     ChapterState chapterState =
-        ChapterState(book.name, chapter.title, chapter.index);
+        ChapterState(book.name ?? "", chapter.title, chapter.index);
     List<PageLine> pageLines = [];
     TextPainter textPainter = config.textPainter;
     TextStyle style;
@@ -357,11 +357,10 @@ MapEntry<String?, List<BookChapter>> _codesMapToBookChapters(
 String? matchToc(RegExp regExp, String line) {
   Iterable<Match> matchers = regExp.allMatches(line);
   // MyLog.d("TxtLoader", "-------------------------------");
-  // MyLog.d("TxtLoader", "matchTitle line: ${matchers.length} >> $line");
+  // MyLog.d("TxtLoader", "matchToc line: ${matchers.length} >> $line");
   for (var match in matchers) {
     String? matched = match.group(0)?.trim().replaceAll("\n", "");
-    // MyLog.d("TxtLoader", "matchTitle line matched : $line");
-    // MyLog.d("TxtLoader", "matched Title : $matched");
+    // MyLog.d("TxtLoader", "matchToc matched: $matched");
     return matched;
   }
   return null;

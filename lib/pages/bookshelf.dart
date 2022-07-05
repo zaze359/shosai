@@ -64,7 +64,7 @@ class _BookshelfPageState extends State<BookshelfPage> {
     // MyLog.i("BookshelfPage", "build: ${books.toString()}");
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Flutter Demo Home Page'),
+        title: const Text('书架'),
         actions: [
           IconButton(
             tooltip: MaterialLocalizations.of(context).searchFieldLabel,
@@ -191,7 +191,7 @@ class _BookshelfContainer extends InheritedWidget {
 
   openBook(BuildContext context, Book book) {
     updateFunc(book);
-    AppRoutes.pushBookReaderPage(context, book);
+    AppRoutes.startBookReaderPage(context, book);
   }
 
   deleteBook(Book book, bool deleteFile) {
@@ -240,7 +240,7 @@ class _BookGridItem extends StatelessWidget {
                 child: Padding(
                   padding: const EdgeInsets.all(8),
                   child: Text(
-                    _book.name,
+                    _book.name ?? "",
                     style: TextStyle(fontSize: 18, color: Colors.black),
                   ),
                 ),
@@ -263,7 +263,7 @@ class _DeleteBookDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text(_book.name),
+      title: Text(_book.name ?? ""),
       contentPadding: const EdgeInsets.fromLTRB(24.0, 20.0, 24.0, 0.0),
       content: Column(
         mainAxisSize: MainAxisSize.min,

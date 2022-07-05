@@ -3,8 +3,6 @@ import 'dart:io';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:shosai/data/book.dart';
-import 'package:shosai/data/repository/book_repository.dart';
 import 'package:shosai/utils/log.dart';
 
 /// 从本地导入书籍

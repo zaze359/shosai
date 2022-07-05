@@ -1,4 +1,5 @@
 import 'package:shosai/data/book.dart';
+import 'package:shosai/data/book_config.dart';
 import 'package:shosai/data/book_state.dart';
 import 'package:shosai/data/repository/book_repository.dart';
 import 'package:shosai/utils/loader/txt_loader.dart';
@@ -27,9 +28,9 @@ class BookLoader {
     List<BookChapter> bookChapters =
         await _bookRepository.queryBookChapters(_book.id);
     if (bookChapters.isEmpty) {
-      String localPath = _book.localPath;
+      String? localPath = _book.localPath;
       MyLog.d("BookLoader", "initBook from local $localPath");
-      if (localPath.isEmpty) {
+      if (localPath == null || localPath.isEmpty) {
         return readingState;
       }
       for (var regExp in reg_exp.tocRegExpList) {

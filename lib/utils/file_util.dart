@@ -210,8 +210,11 @@ class FileService {
   }
 
   /// write [content] into [path] file。
-  static Future<bool> deleteFile(String path,
+  static Future<bool> deleteFile(String? path,
       {bool externalStorage = false, bool manageExternal = false}) async {
+    if(path == null || path.isEmpty) {
+      return true;
+    }
     File file = File(path);
     if (!await checkPermission(
         externalStorage: externalStorage, manageExternal: manageExternal)) {

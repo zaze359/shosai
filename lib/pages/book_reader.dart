@@ -137,7 +137,7 @@ class _MenuWidget extends StatefulWidget {
 class _MenuState extends State<_MenuWidget> {
   _onMenuItemSelected(int position) {
     context.read<UIModel>().closeMenu();
-    AppRoutes.pushBookTocPage(context);
+    AppRoutes.startBookTocPage(context);
   }
 
   void _prevChapter() {

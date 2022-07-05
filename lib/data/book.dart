@@ -1,30 +1,21 @@
 import 'dart:io';
-import 'package:flutter/material.dart';
 import 'package:path/path.dart' as path;
-import 'package:shosai/utils/display_util.dart' as display;
 
 /// Description : 书籍
 /// @author zaze
 /// @date 2022/6/5 - 13:03
 class Book {
-  Book({
-    required this.id,
-    required this.name,
-    required this.extension,
-    required this.localPath,
-  });
-
   /// 数据库id, file Uri
   String id;
 
   /// 书名
-  String name;
+  String? name;
 
   /// 书籍的本地存储路径。
-  String localPath;
+  String? localPath;
 
   /// 文件后缀
-  String extension;
+  String? extension;
 
   /// 编码格式
   String? charset;
@@ -32,14 +23,38 @@ class Book {
   /// 最近访问时间 ms
   int latestVisitTime = 0;
 
-  /// 导入时间ms
+  /// 书籍导入时间ms
   int importTime = 0;
 
-  Book.empty()
-      : id = "",
-        name = "empty",
-        extension = ".txt",
-        localPath = "";
+  /// 作者
+  String? author;
+
+  /// 标签  ,分割
+  String? tags;
+
+  /// 字数
+  String? wordCount;
+
+  // 更新时间
+  String? updateTime;
+
+  /// 最后一章
+  String? latestChapterTitle;
+
+  /// 封面地址
+  String? coverUrl;
+
+  /// 最近检测时间;
+  int latestCheckTime = 0;
+
+  Book({
+    this.id = "",
+    this.name = "",
+    this.extension = "",
+    this.localPath = "",
+  });
+
+  Book.empty() : id = "";
 
   Book.formFile(File file)
       : id = file.uri.toString(),
@@ -48,15 +63,59 @@ class Book {
         localPath = file.path,
         importTime = DateTime.now().millisecondsSinceEpoch;
 
+  Book.fromMap(Map<String, dynamic> map) : id = map['id'] ?? "" {
+    name = map['name'];
+    extension = map['extension'];
+    localPath = map['localPath'];
+    charset = map['charset'];
+    latestVisitTime = map['latestVisitTime'] ?? 0;
+    importTime = map['importTime'] ?? 0;
+    author = map['author'];
+    tags = map['tags'];
+    wordCount = map['wordCount'];
+    updateTime = map['updateTime'];
+    latestChapterTitle = map['latestChapterTitle'];
+    latestCheckTime = map['latestCheckTime'] ?? 0;
+    coverUrl = map['coverUrl'];
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'name': name,
+      'extension': extension,
+      'localPath': localPath,
+      'charset': charset,
+      'latestVisitTime': latestVisitTime,
+      'importTime': importTime,
+      'author': author,
+      'tags': tags,
+      'wordCount': wordCount,
+      'updateTime': updateTime,
+      'latestChapterTitle': latestChapterTitle,
+      'latestCheckTime': latestCheckTime,
+      'coverUrl': coverUrl,
+    };
+  }
+
   @override
   String toString() => '''
   书籍信息:
   -------------------
-  id: $id
+  ID: $id
   书名: $name
+  作者: $author
+  标签: $tags
+  字数: $wordCount
+  最新章节: $latestChapterTitle
+  更新时间: $updateTime
+  封面地址: $coverUrl
   本地存储地址: $localPath
   文件后缀: $extension
   字符编码: $charset
+  导入时间: $importTime
+  最近访问时间: $latestVisitTime
+  最近检测时间: $latestCheckTime
   -------------------
   ''';
 }
@@ -107,86 +166,4 @@ class BookChapter {
   String toString() {
     return 'BookChapter{bookId: $bookId, index: $index, title: $title, charStart: $charStart, charEnd: $charEnd}';
   }
-}
-
-/// 定义一个全局变量。
-BookConfig bookConfig = BookConfig();
-
-/// 书籍配置
-class BookConfig {
-  BookConfig._internal(this.viewWidth, this.viewHeight);
-
-  static final BookConfig _instance = BookConfig._internal(0, 0);
-
-  factory BookConfig([double viewWidth = 0, double viewHeight = 0]) {
-    _instance.updateSize(viewWidth, viewHeight);
-    return _instance;
-  }
-
-  /// view的宽度(单位相当于android的dp)
-  double viewWidth = 0.0;
-
-  /// view的高度(单位相当于android的dp)
-  double viewHeight = 0.0;
-
-  /// 内填充边距
-  double paddingTop = 8.0;
-  double paddingBottom = 8.0;
-  double paddingLeft = 8.0;
-  double paddingRight = 8.0;
-
-  double aspectRatio = 1.0;
-
-  double get pageWidth {
-    return (viewWidth - paddingLeft - paddingRight);
-  }
-
-  double get pageHeight {
-    return (viewHeight - paddingTop - paddingBottom);
-  }
-
-  void updateSize(double viewWidth, double viewHeight) {
-    this.viewWidth = viewWidth;
-    this.viewHeight = viewHeight;
-    aspectRatio = viewWidth / viewHeight;
-  }
-
-  // double get pageWidthPixel {
-  //   return pageWidth * Display.devicePixelRatio;
-  // }
-  //
-  // double get pageHeightPixel {
-  //   return pageHeight * Display.devicePixelRatio;
-  // }
-
-  /// 创建文本绘制器，用于测量文本
-  TextPainter get textPainter => TextPainter(
-        // locale: Localizations.localeOf(navKey.currentState!.context),
-        textScaleFactor: display.textScaleFactor,
-        maxLines: 1,
-        textDirection: TextDirection.ltr,
-      );
-
-  /// 标题样式
-  TextStyle titleStyle = const TextStyle(
-    fontSize: 24,
-    fontWeight: FontWeight.bold,
-    height: 2,
-    // backgroundColor: Colors.red,
-  );
-
-  /// 文本内容样式
-  TextStyle textStyle = const TextStyle(
-    fontSize: 20,
-    // backgroundColor: Colors.blue,
-  );
-
-  @override
-  String toString() => '''
-  书籍配置:
-  -------------------
-  视图大小: $viewWidth/$viewHeight($aspectRatio)
-  视图padding: ($paddingLeft,$paddingTop,$paddingRight,$paddingBottom)
-  -------------------
-  ''';
 }

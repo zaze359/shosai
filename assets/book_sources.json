@@ -1,0 +1,28 @@
+[
+  {
+    "name": "笔趣阁",
+    "tags": "2323",
+    "url": "https://www.xbiquwx.la/",
+    "searchUrl": {
+      "path": "https://www.xbiquwx.la/modules/article/search.php",
+      "params": {
+        "searchkey": {
+          "value": "{{key}}"
+        }
+      },
+      "method": "GET"
+    },
+    "searchRule": {
+      "bookList": "tbody tr@{[[!0]]}",
+      "name": "a@[[0]]@$text",
+      "author": "td@[[2]]@$text",
+      "tags": "td@{[[5,4]]@$text",
+      "updateTime": "td@[[4]]@$text",
+      "wordCount": "td@[[3]]@$text",
+      "latestChapter": "a@[[1]]@$text",
+      "bookUrl": "a@[[0]]@$href",
+      "coverUrl": "a@[[0]]@$href###.+\\D((\\d+)\\d{3})\\D##https://www.xbiquwx.la/files/article/image/$2/$1/$1s.jpg###"
+    },
+    "common": "描述信息"
+  }
+]

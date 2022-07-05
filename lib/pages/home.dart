@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shosai/pages/book_source_page.dart';
 import 'package:shosai/pages/bookshelf.dart';
 import 'package:shosai/utils/log.dart';
 
@@ -12,6 +13,17 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   int _selectedTabIndex = 0;
 
+  Map<BottomNavigationBarItem, Widget> tabPages = {
+    const BottomNavigationBarItem(
+      icon: Icon(Icons.book),
+      label: "书架",
+    ): BookshelfPage(),
+    const BottomNavigationBarItem(
+      icon: Icon(Icons.import_contacts),
+      label: "书源",
+    ): BookSourcePage()
+  };
+
   void _onItemTapped(int tabIndex) {
     setState(() {
       _selectedTabIndex = tabIndex;
@@ -20,42 +32,13 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    final List<Widget> tabPages = [
-      BookshelfPage(),
-      BookshelfPage(),
-      // Center(
-      //   child: Column(
-      //     mainAxisAlignment: MainAxisAlignment.center,
-      //     children: <Widget>[
-      //       const Text(
-      //         'You have pushed the button this many times:',
-      //       ),
-      //       Text(
-      //         '$_selectedTabIndex',
-      //         style: Theme.of(context).textTheme.headline4,
-      //       )
-      //     ],
-      //   ),
-      // )
-    ];
-    var bottomNavigationBarItems = <BottomNavigationBarItem>[
-      const BottomNavigationBarItem(
-        icon: Icon(Icons.book),
-        label: "书架",
-      ),
-      const BottomNavigationBarItem(
-        icon: Icon(Icons.book),
-        label: "书架",
-      ),
-    ];
-
     return Scaffold(
       body: IndexedStack(
         index: _selectedTabIndex,
-        children: tabPages,
+        children: tabPages.values.toList(),
       ),
       bottomNavigationBar: BottomNavigationBar(
-        items: bottomNavigationBarItems,
+        items: tabPages.keys.toList(),
         currentIndex: _selectedTabIndex,
         selectedItemColor: Colors.blue,
         onTap: _onItemTapped,
