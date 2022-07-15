@@ -66,7 +66,7 @@ class BookController {
     }
   }
 
-  List<BookChapter> getBookChapters() {
+  Future<List<BookChapter>> getBookChapters() async {
     return _bookState?.bookChapters ?? [];
   }
 

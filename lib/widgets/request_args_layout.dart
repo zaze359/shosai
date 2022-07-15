@@ -108,30 +108,32 @@ class _ParamsWidgetState extends State<_ParamsWidget> {
     List<DataRow> dataRows = [];
     for (int i = 0; i < params.length; i++) {
       UrlParam param = params[i];
-      dataRows.add(DataRow(
-        // selected: true,
-        // onSelectChanged: (s) {},
-        cells: [
-          DataCell(
-            TextFormField(
-              decoration: const InputDecoration(border: InputBorder.none),
-              initialValue: param.key,
-              onChanged: (v) {
-                param.key = v;
-              },
+      dataRows.add(
+        DataRow(
+          // selected: true,
+          // onSelectChanged: (s) {},
+          cells: [
+            DataCell(
+              TextFormField(
+                decoration: const InputDecoration(border: InputBorder.none),
+                initialValue: param.key,
+                onChanged: (v) {
+                  param.key = v;
+                },
+              ),
             ),
-          ),
-          DataCell(
-            TextFormField(
-              decoration: const InputDecoration(border: InputBorder.none),
-              initialValue: param.value.value,
-              onChanged: (v) {
-                param.value.value = v;
-              },
+            DataCell(
+              TextFormField(
+                decoration: const InputDecoration(border: InputBorder.none),
+                initialValue: param.value.value,
+                onChanged: (v) {
+                  param.value.value = v;
+                },
+              ),
             ),
-          ),
-        ],
-      ));
+          ],
+        ),
+      );
     }
     // 增加一个待输入行
     dataRows.add(DataRow(

@@ -27,7 +27,7 @@ class BookLoader {
     BookState readingState = BookState(_book);
     List<BookChapter> bookChapters =
         await _bookRepository.queryBookChapters(_book.id);
-    if (bookChapters.isEmpty) {
+    if (bookChapters.isEmpty && _book.isLocal()) {
       String? localPath = _book.localPath;
       MyLog.d("BookLoader", "initBook from local $localPath");
       if (localPath == null || localPath.isEmpty) {

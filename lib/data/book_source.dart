@@ -24,8 +24,14 @@ class BookSource {
   /// 搜索url
   BookUrl searchUrl = BookUrl();
 
-  // 搜索规则
+  /// 搜索规则
   SearchRule searchRule = SearchRule();
+
+  /// 目录规则
+  TocRule tocRule = TocRule();
+
+  /// 书籍信息规则
+  BookInfoRule bookInfoRule = BookInfoRule();
 
   // 最近更新时间
   int lastUpdateTime = 0;
@@ -51,8 +57,11 @@ class BookSource {
         name = map['name'],
         tags = map['tags'],
         comment = map['comment'] {
-    searchUrl = BookUrl.fromJson(jsonDecode(map['searchUrl']));
-    searchRule = SearchRule.fromJson(jsonDecode(map['searchRule']));
+    searchUrl = BookUrl.fromJson(jsonDecode(map['searchUrl'] ?? "{}"));
+    searchRule = SearchRule.fromJson(jsonDecode(map['searchRule'] ?? "{}"));
+    tocRule = TocRule.fromJson(jsonDecode(map['tocRule'] ?? "{}"));
+    bookInfoRule =
+        BookInfoRule.fromJson(jsonDecode(map['bookInfoRule'] ?? "{}"));
     lastUpdateTime = map['lastUpdateTime'] ?? 0;
   }
 
@@ -63,6 +72,8 @@ class BookSource {
         'comment': comment,
         'searchUrl': jsonEncode(searchUrl),
         'searchRule': jsonEncode(searchRule),
+        'tocRule': jsonEncode(tocRule),
+        'bookInfoRule': jsonEncode(bookInfoRule),
         'lastUpdateTime': lastUpdateTime,
       };
 
@@ -155,8 +166,10 @@ class UrlKeys {
     _params["{{page}}"] = page;
   }
 
-  UrlKeys(String key, {int page = 1}) {
-    this.key = key;
+  UrlKeys({String? key, int page = 1}) {
+    if (key != null) {
+      this.key = key;
+    }
     this.page = page;
   }
 
@@ -191,79 +204,6 @@ class UrlKeys {
   }
 }
 
-class SearchRule {
-  // 书籍列表
-  BookRule bookList = BookRule(ruleName: "书籍列表");
-
-  // 书籍名
-  BookRule name = BookRule(ruleName: "书籍名");
-
-  // 作者
-  BookRule author = BookRule(ruleName: "作者");
-
-  // 简介
-  BookRule intro = BookRule(ruleName: "简介");
-
-  // 类型
-  BookRule tags = BookRule(ruleName: "类型");
-
-  // 最新章节
-  BookRule latestChapter = BookRule(ruleName: "最新章节");
-
-  // 更新时间
-  BookRule updateTime = BookRule(ruleName: "更新时间");
-
-  // 书籍详情页
-  BookRule bookUrl = BookRule(ruleName: "书籍详情页");
-
-  // 封面
-  BookRule coverUrl = BookRule(ruleName: "封面");
-
-  // 字数
-  BookRule wordCount = BookRule(ruleName: "字数");
-
-  SearchRule();
-
-  SearchRule.fromJson(dynamic json) {
-    Map jsonObj;
-    if (json is Map) {
-      jsonObj = json;
-    } else {
-      jsonObj = jsonDecode(json);
-    }
-    bookList.rule = jsonObj["bookList"];
-    name.rule = jsonObj["name"];
-    author.rule = jsonObj["author"];
-    intro.rule = jsonObj["intro"];
-    tags.rule = jsonObj["tags"];
-    latestChapter.rule = jsonObj["latestChapter"];
-    updateTime.rule = jsonObj["updateTime"];
-    bookUrl.rule = jsonObj["bookUrl"];
-    coverUrl.rule = jsonObj["coverUrl"];
-    wordCount.rule = jsonObj["wordCount"];
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      "bookList": bookList.rule,
-      "name": name.rule,
-      "author": author.rule,
-      "intro": intro.rule,
-      "tags": tags.rule,
-      "latestChapter": latestChapter.rule,
-      "updateTime": updateTime.rule,
-      "bookUrl": bookUrl.rule,
-      "coverUrl": coverUrl.rule,
-      "wordCount": wordCount.rule,
-    };
-  }
-
-  @override
-  String toString() {
-    return 'SearchRule{bookList: $bookList, name: $name, author: $author, intro: $intro, tags: $tags, latestChapter: $latestChapter, updateTime: $updateTime, bookUrl: $bookUrl, coverUrl: $coverUrl, wordCount: $wordCount}';
-  }
-}
-
 class BookRule {
   String? rule;
   String? ruleName;
@@ -288,6 +228,7 @@ class BookRule {
     }).join(separator);
     return result.replaceAll(from ?? RegExp(r'[\s]+'), replace ?? "");
   }
+
   // a@[[0]]@#p@href@###.+\D((\d+)\d{3})\D##https://www.xbiquwx.la/files/article/image/$2/$1/$1s.jpg###
   List<Element>? getElements(dynamic element) {
     if (element is Element || element is Document) {
@@ -307,8 +248,7 @@ class BookRule {
       array.sublist(1, array.length).forEach((cmd) {
         queryElements = _execute(queryElements, cmd.trim());
       });
-      bookSourceLog(
-          "BookRule elements : ${queryElements.map((e) {
+      bookSourceLog("BookRule elements : ${queryElements.map((e) {
         return e.outerHtml;
       }).join(" ")}");
       bookSourceLog(" ----------------- BookRule end $ruleName: $rule");
@@ -355,6 +295,7 @@ class BookRule {
       case "text":
         break;
       case "href":
+      case "src":
         elements = _findAttributes(elements, rule);
         break;
       default:
@@ -417,17 +358,25 @@ class BookRule {
       }
     } else {
       // 单独选择的位置
-      int index = int.parse(rule);
-      selectedIndex.add(index >= 0 ? index : (elements.length + index));
+      rule.split(':').forEach((subRule) {
+        int index = int.parse(subRule);
+        selectedIndex.add(index >= 0 ? index : (elements.length + index));
+      });
     }
     if (isRemove) {
       for (var index in selectedIndex) {
+        if (index >= elements.length) {
+          continue;
+        }
         elements.removeAt(index);
       }
       return elements;
     } else {
       List<Element> resultList = [];
       for (var index in selectedIndex) {
+        if (index >= elements.length) {
+          continue;
+        }
         resultList.add(elements[index]);
       }
       return resultList;
@@ -462,4 +411,140 @@ class BookRule {
   }
 }
 
-class RuleWrapper {}
+class SearchRule {
+  // 书籍列表
+  BookRule bookList = BookRule(ruleName: "书籍列表");
+
+  // 书籍名
+  BookRule name = BookRule(ruleName: "书籍名");
+
+  // 作者
+  BookRule author = BookRule(ruleName: "作者");
+
+  // 简介
+  BookRule intro = BookRule(ruleName: "简介");
+
+  // 类型
+  BookRule tags = BookRule(ruleName: "类型");
+
+  // 最新章节
+  BookRule latestChapter = BookRule(ruleName: "最新章节");
+
+  // 更新时间
+  BookRule updateTime = BookRule(ruleName: "更新时间");
+
+  // 书籍详情页
+  BookRule bookUrl = BookRule(ruleName: "书籍详情页");
+
+  // 封面
+  BookRule coverUrl = BookRule(ruleName: "封面");
+
+  // 字数
+  BookRule wordCount = BookRule(ruleName: "字数");
+
+  SearchRule();
+
+  SearchRule.fromJson(dynamic json) {
+    bookList.rule = json["bookList"];
+    name.rule = json["name"];
+    author.rule = json["author"];
+    intro.rule = json["intro"];
+    tags.rule = json["tags"];
+    latestChapter.rule = json["latestChapter"];
+    updateTime.rule = json["updateTime"];
+    bookUrl.rule = json["bookUrl"];
+    coverUrl.rule = json["coverUrl"];
+    wordCount.rule = json["wordCount"];
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      "bookList": bookList.rule,
+      "name": name.rule,
+      "author": author.rule,
+      "intro": intro.rule,
+      "tags": tags.rule,
+      "latestChapter": latestChapter.rule,
+      "updateTime": updateTime.rule,
+      "bookUrl": bookUrl.rule,
+      "coverUrl": coverUrl.rule,
+      "wordCount": wordCount.rule,
+    };
+  }
+
+  @override
+  String toString() {
+    return 'SearchRule{bookList: $bookList, name: $name, author: $author, intro: $intro, tags: $tags, latestChapter: $latestChapter, updateTime: $updateTime, bookUrl: $bookUrl, coverUrl: $coverUrl, wordCount: $wordCount}';
+  }
+}
+
+class TocRule {
+  BookRule chapterList = BookRule(ruleName: "目录列表");
+  BookRule chapterName = BookRule(ruleName: "章节名");
+  BookRule chapterUrl = BookRule(ruleName: "章节url");
+  BookRule updateTime = BookRule(ruleName: "更新时间");
+
+  TocRule();
+
+  TocRule.fromJson(dynamic json) {
+    chapterList.rule = json["chapterList"];
+    chapterName.rule = json["chapterName"];
+    chapterUrl.rule = json["chapterUrl"];
+    updateTime.rule = json["updateTime"];
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      "chapterList": chapterList.rule,
+      "chapterName": chapterName.rule,
+      "chapterUrl": chapterUrl.rule,
+      "updateTime": updateTime.rule,
+    };
+  }
+
+  @override
+  String toString() {
+    return 'TocRule{chapterList: $chapterList, chapterName: $chapterName, chapterUrl: $chapterUrl, updateTime: $updateTime}';
+  }
+}
+
+class BookInfoRule {
+  BookRule author = BookRule(ruleName: "作者");
+  BookRule coverUrl = BookRule(ruleName: "封面");
+  BookRule intro = BookRule(ruleName: "简介");
+  BookRule tags = BookRule(ruleName: "类型");
+  BookRule lastChapter = BookRule(ruleName: "最后章节名");
+  BookRule name = BookRule(ruleName: "书名");
+  BookRule tocUrl = BookRule(ruleName: "章节列表");
+  BookRule wordCount = BookRule(ruleName: "字数");
+
+  BookInfoRule();
+
+  BookInfoRule.fromJson(dynamic json) {
+    author.rule = json["author"];
+    coverUrl.rule = json["coverUrl"];
+    intro.rule = json["intro"];
+    tags.rule = json["tags"];
+    lastChapter.rule = json["lastChapter"];
+    name.rule = json["name"];
+    tocUrl.rule = json["tocUrl"];
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      "author": author.rule,
+      "coverUrl": coverUrl.rule,
+      "intro": intro.rule,
+      "tags": tags.rule,
+      "lastChapter": lastChapter.rule,
+      "name": name.rule,
+      "tocUrl": tocUrl.rule,
+      "wordCount": wordCount.rule,
+    };
+  }
+
+  @override
+  String toString() {
+    return 'BookInfoRule{author: $author, coverUrl: $coverUrl, intro: $intro, kind: $tags, lastChapter: $lastChapter, name: $name, tocUrl: $tocUrl}';
+  }
+}

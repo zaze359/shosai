@@ -3,18 +3,35 @@ import 'package:shosai/data/book.dart';
 import 'package:shosai/utils/controller.dart';
 import 'package:shosai/utils/custom_event.dart';
 import 'package:shosai/utils/log.dart';
+import 'package:shosai/widgets/loading_widget.dart';
 
 class BookTocPage extends StatelessWidget {
   BookTocPage({super.key});
 
+  Future<List<BookChapter>> loadBookChapters(Book? book) async {
+    bookController.book = book;
+    if (book?.isLocal() == false) {
+      await bookController.init();
+    }
+    return bookController.getBookChapters();
+  }
+
   @override
   Widget build(BuildContext context) {
+    Book? book = ModalRoute.of(context)?.settings.arguments as Book?;
     return Scaffold(
       appBar: AppBar(
         title: const Text('目录'),
       ),
-      body: BookTocWidget(bookController.getBookChapters(),
-          bookController.chapterIndex),
+      body: LoadingBuild<List<BookChapter>>(
+        future: loadBookChapters(book),
+        success: (c, v) {
+          return BookTocWidget(
+            v ?? [],
+            bookController.chapterIndex,
+          );
+        },
+      ),
     );
   }
 }

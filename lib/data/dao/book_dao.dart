@@ -15,7 +15,9 @@ class BookTable extends BaseTable<Book> {
         "name TEXT, "
         "extension TEXT, "
         "localPath TEXT, "
+        "origin TEXT, "
         "charset TEXT, "
+        "intro TEXT, "
         "latestVisitTime INTEGER, "
         "importTime INTEGER, "
         "author TEXT, "
@@ -24,7 +26,8 @@ class BookTable extends BaseTable<Book> {
         "updateTime TEXT, "
         "latestChapterTitle TEXT, "
         "latestCheckTime INTEGER, "
-        "coverUrl TEXT"
+        "coverUrl TEXT,"
+        "tocUrl TEXT"
         ")";
   }
 
@@ -79,6 +82,7 @@ class BookChapterTable extends BaseTable<BookChapter> {
     };
   }
 }
+
 /// 书源表
 class BookSourceTable extends BaseTable<BookSource> {
   @override
@@ -93,8 +97,10 @@ class BookSourceTable extends BaseTable<BookSource> {
         "tags TEXT, "
         "comment TEXT, "
         "searchUrl TEXT, "
-        "lastUpdateTime INTEGER, "
-        "searchRule TEXT)";
+        "searchRule TEXT, "
+        "tocRule TEXT, "
+        "bookInfoRule TEXT, "
+        "lastUpdateTime INTEGER)";
   }
 
   @override

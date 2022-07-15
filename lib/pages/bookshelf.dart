@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:shosai/data/book.dart';
 import 'package:shosai/data/repository/book_repository.dart';
+import 'package:shosai/pages/book_list.dart';
 import 'package:shosai/routes.dart';
 import 'package:shosai/utils/file_util.dart';
 import 'package:shosai/utils/import.dart' as imports;
@@ -38,11 +39,25 @@ class _BookshelfPageState extends State<BookshelfPage> {
     });
   }
 
+  openBook(Book book) {
+    _updateBook(book);
+    AppRoutes.startBookReaderPage(context, book);
+  }
+
   Future<void> _updateBook(Book book) async {
     book.latestVisitTime = DateTime.now().millisecondsSinceEpoch;
     // MyLog.d("_BookItem", "_openBook: ${book.name}");
     await widget._bookRepository.insertOrUpdateBook(book);
     _refreshBookshelf();
+  }
+
+  showDeleteDialog(Book book) {
+    return showDialog(
+      context: context,
+      builder: (_) => _DeleteBookDialog(book, (bool deleteFile) {
+        _deleteBook(book, deleteFile);
+      }),
+    );
   }
 
   Future<void> _deleteBook(Book book, bool deleteFile) async {
@@ -71,7 +86,10 @@ class _BookshelfPageState extends State<BookshelfPage> {
             icon: const Icon(
               Icons.search,
             ),
-            onPressed: () {},
+            onPressed: () async {
+              AppRoutes.startBookSearchPage(context,
+                  (await BookRepository().queryAllBookSources()).first);
+            },
           ),
           PopupMenuButton<Text>(
             position: PopupMenuPosition.under,
@@ -109,35 +127,21 @@ class _BookshelfPageState extends State<BookshelfPage> {
   }
 
   Widget _showBookshelf(List<Book>? books) {
-    return _BookshelfContainer(
-      updateFunc: _updateBook,
-      deleteFunc: _deleteBook,
-      child: (books == null || books.isEmpty)
-          ? _empty()
-          : RefreshIndicator(
-              onRefresh: () {
-                return _refreshBookshelf();
-              },
-              child: _grid(3, books),
+    return (books == null || books.isEmpty)
+        ? _empty()
+        : RefreshIndicator(
+            onRefresh: () {
+              return _refreshBookshelf();
+            },
+            child: BookListPage(
+              books,
+              onLongPress: showDeleteDialog,
+              onTap: openBook,
             ),
-    );
+          );
   }
 
-  Widget _grid(int count, List<Book> books) {
-    return GridView.count(
-      padding: const EdgeInsets.all(12),
-      crossAxisCount: count,
-      mainAxisSpacing: 8,
-      crossAxisSpacing: 8,
-      childAspectRatio: sqrt1_2,
-      children: books
-          .map((e) => KeepAliveWrapper(
-                child: _BookGridItem(e),
-              ))
-          .toList(),
-    );
-  }
-
+  //
   Widget _empty() {
     return Center(
       child: TextButton(
@@ -172,85 +176,10 @@ class _BookshelfPageState extends State<BookshelfPage> {
   }
 }
 
-class _BookshelfContainer extends InheritedWidget {
-
-  Function(Book) updateFunc;
-  Function(Book, bool) deleteFunc;
-
-  _BookshelfContainer(
-      {required super.child,
-      required this.updateFunc,
-      required this.deleteFunc});
-
-  static _BookshelfContainer of(BuildContext context) =>
-      context.dependOnInheritedWidgetOfExactType<_BookshelfContainer>()!;
-
-  static _BookshelfContainer get(BuildContext context) => context
-      .getElementForInheritedWidgetOfExactType<_BookshelfContainer>()!
-      .widget as _BookshelfContainer;
-
-  openBook(BuildContext context, Book book) {
-    updateFunc(book);
-    AppRoutes.startBookReaderPage(context, book);
-  }
-
-  deleteBook(Book book, bool deleteFile) {
-    deleteFunc(book, deleteFile);
-  }
-
-  @override
-  bool updateShouldNotify(_BookshelfContainer oldWidget) {
-    return true;
-  }
-}
-
 class _BookshelfNotification extends Notification {
   Book _book;
 
   _BookshelfNotification(this._book);
-}
-
-/// 书架页item
-class _BookGridItem extends StatelessWidget {
-  const _BookGridItem(this._book);
-
-  final Book _book;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        _BookshelfContainer.of(context).openBook(context, _book);
-      },
-      onLongPress: () {
-        showDialog(
-          context: context,
-          builder: (_) => _DeleteBookDialog(_book, (bool deleteFile) {
-            // dialog 中的
-            _BookshelfContainer.get(context).deleteFunc(_book, deleteFile);
-          }),
-        );
-      },
-      child: Column(
-        children: [
-          AspectRatio(
-            aspectRatio: sqrt1_2, // A4 比例 sqrt1_2
-            child: Card(
-              child: Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: Text(
-                    _book.name ?? "",
-                    style: TextStyle(fontSize: 18, color: Colors.black),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 class _DeleteBookDialog extends StatelessWidget {

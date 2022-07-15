@@ -65,7 +65,7 @@ abstract class BaseTable<T> {
     return await batch.commit();
   }
 
-  Future<List<T>> queryAll(Database db,
+  Future<List<T>> query(Database db,
       {bool? distinct,
       List<String>? columns,
       String? where,

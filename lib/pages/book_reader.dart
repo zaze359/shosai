@@ -43,7 +43,7 @@ class BookReaderPage extends StatelessWidget {
               SafeArea(
                 child: _ReadView(),
               ),
-              _MenuWidget()
+              _MenuWidget(book)
             ],
           ),
         ),
@@ -116,6 +116,10 @@ class _ReadViewState extends State<_ReadView> {
 // --------------------------------------------------
 /// 菜单栏
 class _MenuWidget extends StatefulWidget {
+  Book book;
+
+  _MenuWidget(this.book);
+
   final List<BottomNavigationBarItem> bottomNavigationBarItems =
       <BottomNavigationBarItem>[
     const BottomNavigationBarItem(
@@ -137,7 +141,7 @@ class _MenuWidget extends StatefulWidget {
 class _MenuState extends State<_MenuWidget> {
   _onMenuItemSelected(int position) {
     context.read<UIModel>().closeMenu();
-    AppRoutes.startBookTocPage(context);
+    AppRoutes.startBookTocPage(context, widget.book);
   }
 
   void _prevChapter() {

@@ -21,7 +21,9 @@ class _BookSourcePageState extends State<BookSourcePage> {
   Widget build(BuildContext context) {
     printD("_BookSourcePageState : Build");
     return Scaffold(
-      appBar: AppBar(),
+      appBar: AppBar(
+        title: const Text("书源"),
+      ),
       body: FutureBuilder<List<BookSource>>(
         future: BookRepository().queryAllBookSources(),
         builder: (context, snapshot) {
@@ -57,7 +59,8 @@ class _BookSourcePageState extends State<BookSourcePage> {
                             width: 0.5,
                             style: BorderStyle.solid),
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(24.0),),
+                          borderRadius: BorderRadius.circular(24.0),
+                        ),
                       ),
                       child: Text(
                         data[index].name,
@@ -77,7 +80,7 @@ class _BookSourcePageState extends State<BookSourcePage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-          await ConvertRule().formLegadoJson("legadoRule");
+          await ConvertRule().formLegadoJson("");
           setState(() {});
         },
         child: Icon(Icons.transform),

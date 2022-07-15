@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 import 'package:shosai/data/book.dart';
@@ -56,7 +58,7 @@ class BookRepository {
         await _dropTables(db);
         await _createTables(db);
       },
-      version: 1,
+      version: 2,
     );
     return _database!;
   }
@@ -90,8 +92,7 @@ class BookRepository {
 
   /// 查询所有书籍
   Future<List<Book>> queryAllBooks() async {
-    return _bookTable.queryAll(await _openDb(),
-        orderBy: 'latestVisitTime DESC');
+    return _bookTable.query(await _openDb(), orderBy: 'latestVisitTime DESC');
   }
 
   // --------------------------------------------------
@@ -102,14 +103,14 @@ class BookRepository {
 
   /// 查询指定书籍的章节信息
   Future<List<BookChapter>> queryBookChapters(String bookId) async {
-    return _bookChapterTable
-        .queryAll(await _openDb(), where: 'bookId = ?', whereArgs: [bookId]);
+    return _bookChapterTable.query(await _openDb(),
+        where: 'bookId = ?', whereArgs: [bookId]);
   }
 
   /// 清除指定书籍的章节信息
   Future<int> clearBookChapters(String bookId) async {
-    return _bookChapterTable
-        .delete(await _openDb(), where: 'bookId = ?', whereArgs: [bookId]);
+    return _bookChapterTable.delete(await _openDb(),
+        where: 'bookId = ?', whereArgs: [bookId]);
   }
 
   // --------------------------------------------------
@@ -117,12 +118,24 @@ class BookRepository {
   Future<int> updateBookSource(BookSource source) async {
     return _bookSourceTable.insertOrUpdate(await _openDb(), source);
   }
+
   Future<List<Object?>> insertBookSources(List<BookSource> sources) async {
     return _bookSourceTable.batchInsert(await _openDb(), sources);
   }
 
+  Future<BookSource?> queryBookSource(String url) async {
+    List<BookSource> list = await _bookSourceTable
+        .query(await _openDb(), where: 'url = ?', whereArgs: [url]);
+    if (list.isEmpty) {
+      return null;
+    } else {
+      return list[0];
+    }
+  }
+
   /// 获取所有书源列表
   Future<List<BookSource>> queryAllBookSources() async {
-    return _bookSourceTable.queryAll(await _openDb(), orderBy: 'lastUpdateTime DESC');
+    return _bookSourceTable.query(await _openDb(),
+        orderBy: 'lastUpdateTime DESC');
   }
 }

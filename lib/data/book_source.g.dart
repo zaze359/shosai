@@ -14,6 +14,8 @@ BookSource _$BookSourceFromJson(Map<String, dynamic> json) => BookSource(
       ..comment = json['comment'] as String?
       ..searchUrl = BookUrl.fromJson(json['searchUrl'] as Map<String, dynamic>)
       ..searchRule = SearchRule.fromJson(json['searchRule'])
+      ..tocRule = TocRule.fromJson(json['tocRule'])
+      ..bookInfoRule = BookInfoRule.fromJson(json['bookInfoRule'])
       ..lastUpdateTime = json['lastUpdateTime'] as int;
 
 Map<String, dynamic> _$BookSourceToJson(BookSource instance) =>
@@ -24,6 +26,8 @@ Map<String, dynamic> _$BookSourceToJson(BookSource instance) =>
       'comment': instance.comment,
       'searchUrl': instance.searchUrl,
       'searchRule': instance.searchRule,
+      'tocRule': instance.tocRule,
+      'bookInfoRule': instance.bookInfoRule,
       'lastUpdateTime': instance.lastUpdateTime,
     };
 
