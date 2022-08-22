@@ -51,6 +51,7 @@ class ConvertRule {
     _convertSearchRule(source.searchRule, json["ruleSearch"]);
     _convertBookInfoRule(source.bookInfoRule, json["ruleBookInfo"]);
     _convertTocRule(source.tocRule, json["ruleToc"]);
+    _convertContentRule(source.contentRule, json["ruleContent"]);
     return source;
   }
 
@@ -110,6 +111,11 @@ class ConvertRule {
     rule.chapterName.rule = _convertLegadoRule(ruleSearch["chapterName"]);
     rule.chapterList.rule = _convertLegadoRule(ruleSearch["chapterList"]);
     rule.updateTime.rule = _convertLegadoRule(ruleSearch["updateTime"]);
+    return rule;
+  }
+  /// 转换章节内容规则
+  ContentRule _convertContentRule(ContentRule rule, Map<String, dynamic> ruleSearch) {
+    rule.content.rule = _convertLegadoRule(ruleSearch["content"]);
     return rule;
   }
 

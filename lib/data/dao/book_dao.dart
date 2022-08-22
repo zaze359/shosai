@@ -48,6 +48,8 @@ class BookChapterTable extends BaseTable<BookChapter> {
   String getColumnSql() {
     return "(id TEXT PRIMARY KEY, "
         "bookId TEXT, "
+        "url TEXT, "
+        "localPath TEXT, "
         "_index INTEGER, "
         "title TEXT, "
         "charStart INTEGER, "
@@ -64,21 +66,25 @@ class BookChapterTable extends BaseTable<BookChapter> {
     return BookChapter(
       bookId: map['bookId'] ?? "",
       index: map['_index'] ?? 0,
+      url: map['url'] ?? 0,
       title: map['title'] ?? "",
       charStart: map['charStart'] ?? 0,
       charEnd: map['charEnd'] ?? 0,
+      localPath: map['localPath'],
     );
   }
 
   @override
   Map<String, dynamic> toMap(BookChapter value) {
     return {
-      'id': "${value.bookId}_${value.title}_${value.index}",
+      'id': "${value.bookId}_${value.index}",
       'bookId': value.bookId,
       '_index': value.index,
       'title': value.title,
       'charStart': value.charStart,
-      'charEnd': value.charEnd
+      'charEnd': value.charEnd,
+      'url': value.url,
+      'localPath': value.localPath,
     };
   }
 }

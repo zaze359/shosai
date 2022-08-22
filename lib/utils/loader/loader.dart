@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:shosai/data/book.dart';
 import 'package:shosai/data/book_config.dart';
 import 'package:shosai/data/book_state.dart';
 import 'package:shosai/data/repository/book_repository.dart';
+import 'package:shosai/service/book_service.dart';
 import 'package:shosai/utils/loader/txt_loader.dart';
 import 'package:shosai/utils/reg_exp.dart' as reg_exp;
 
@@ -27,25 +30,16 @@ class BookLoader {
     BookState readingState = BookState(_book);
     List<BookChapter> bookChapters =
         await _bookRepository.queryBookChapters(_book.id);
-    if (bookChapters.isEmpty && _book.isLocal()) {
+    if (!_book.isLocal()) {
+      MyLog.d("BookLoader", "initBook from remote");
+      // _downloadChapter(bookChapters);
+    } else if (bookChapters.isEmpty) {
       String? localPath = _book.localPath;
       MyLog.d("BookLoader", "initBook from local $localPath");
       if (localPath == null || localPath.isEmpty) {
         return readingState;
       }
-      for (var regExp in reg_exp.tocRegExpList) {
-        MyLog.d("BookLoader", "initBook regExp：$regExp");
-        // 若匹配的章节过少则，换一个规则重新匹配。
-        bookChapters = await _fileLoader.matchChapters(regExp);
-        if (bookChapters.length > 3) {
-          break;
-        }
-        // else if (bookChapters.isNotEmpty &&
-        //     bookChapters[bookChapters.length - 1].charEnd < 524288) {
-        //   // 虽然仅有几章，但是内容不多，不考虑重新匹配。
-        //   break;
-        // }
-      }
+      bookChapters = await _matchChapters();
       await _bookRepository.insertChapters(bookChapters);
       await _bookRepository.insertOrUpdateBook(_book);
     } else {
@@ -56,6 +50,49 @@ class BookLoader {
     return readingState;
   }
 
+  Future<bool> _downloadChapter(List<BookChapter> chapters) {
+    if (chapters.isEmpty) {
+      return Future.value(false);
+    }
+    Completer<bool> completer = Completer();
+    for (var chapter in chapters) {
+      bookService.downloadChapter(
+        chapter,
+        onStart: (total) {
+          MyLog.d("_downloadChapter ${chapter.title} onStart");
+        },
+        onSuccess: (savePath) {
+          MyLog.d("_downloadChapter ${chapter.title} onSuccess");
+          completer.complete(true);
+        },
+        onFailure: (code, msg, savePath) {
+          MyLog.d("_downloadChapter ${chapter.title} onFailure: $msg($code)");
+          completer.complete(false);
+        },
+      );
+    }
+    return completer.future;
+  }
+
+  /// 正则格式化章节内容
+  Future<List<BookChapter>> _matchChapters() async {
+    List<BookChapter> bookChapters = [];
+    for (var regExp in reg_exp.tocRegExpList) {
+      MyLog.d("BookLoader", "initBook regExp：$regExp");
+      // 若匹配的章节过少则，换一个规则重新匹配。
+      bookChapters = await _fileLoader.matchChapters(regExp);
+      if (bookChapters.length > 3) {
+        break;
+      }
+      // else if (bookChapters.isNotEmpty &&
+      //     bookChapters[bookChapters.length - 1].charEnd < 524288) {
+      //   // 虽然仅有几章，但是内容不多，不考虑重新匹配。
+      //   break;
+      // }
+    }
+    return bookChapters;
+  }
+
   /// 加载章节状态
   Future<ChapterState?> loadChapter(BookChapter? chapter) async {
     // MyLog.d("BookLoader", "loadChapter start: $chapter");
@@ -63,7 +100,14 @@ class BookLoader {
       return null;
     }
     _loadingChapter.add(chapter.index);
-    return _fileLoader.loadChapterContent(chapter).then((value) {
+    Future<ChapterState> chapterFuture;
+    if (!_book.isLocal()) {
+      await _downloadChapter([chapter]);
+      chapterFuture = _fileLoader.loadChapterContent(chapter.localPath, chapter);
+    } else {
+      chapterFuture = _fileLoader.loadChapterContent(_book.localPath, chapter);
+    }
+    return chapterFuture.then((value) {
       // MyLog.d("BookLoader", "loadChapter end: $chapter");
       _loadingChapter.remove(chapter.index);
       return value;
@@ -94,7 +138,7 @@ abstract class ChapterLoader {
   /// 加载指定章节内容
   /// 将章节内容分页
   /// 页内分行
-  Future<ChapterState> loadChapterContent(BookChapter chapter);
+  Future<ChapterState> loadChapterContent(String? path, BookChapter chapter);
 }
 
 class PageLoader {

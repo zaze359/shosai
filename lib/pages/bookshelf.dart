@@ -8,6 +8,7 @@ import 'package:shosai/routes.dart';
 import 'package:shosai/utils/file_util.dart';
 import 'package:shosai/utils/import.dart' as imports;
 import 'package:shosai/utils/log.dart';
+import 'package:shosai/utils/utils.dart';
 import 'package:shosai/widgets/cache_layout.dart';
 import 'package:shosai/widgets/loading_widget.dart';
 
@@ -87,8 +88,7 @@ class _BookshelfPageState extends State<BookshelfPage> {
               Icons.search,
             ),
             onPressed: () async {
-              AppRoutes.startBookSearchPage(context,
-                  (await BookRepository().queryAllBookSources()).first);
+              AppRoutes.startBookSearchPage(context);
             },
           ),
           PopupMenuButton<Text>(
@@ -163,9 +163,8 @@ class _BookshelfPageState extends State<BookshelfPage> {
       if (Platform.isIOS) {
         // IOS拷贝
         // TODO 需要优化处理，相名文件的处理
-        Directory newDir = await FileService.supportDir();
         String newPath = element.absolute.path
-            .replaceAll(element.parent.absolute.path, newDir.absolute.path);
+            .replaceAll(element.parent.absolute.path, await FileService.supportDir());
         widget._bookRepository
             .insertOrUpdateBook(Book.formFile(await element.copy(newPath)));
       } else {

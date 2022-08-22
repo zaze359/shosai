@@ -79,6 +79,7 @@ class BookController {
     return loadHistoryPage();
   }
 
+  /// 初始化
   init() async {
     MyLog.d("BookController", "init: $_initialized");
     if (!_initialized) {

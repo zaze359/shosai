@@ -47,10 +47,18 @@ class TxtLoader extends ChapterLoader {
   }
 
   @override
-  Future<ChapterState> loadChapterContent(BookChapter chapter) async {
+  Future<ChapterState> loadChapterContent(
+      String? path, BookChapter chapter) async {
     // MyLog.d("loadChapterContent", "_readFileContent start: $chapter");
-    Stream<List<int>> stream = FileService.openRead(book.localPath,
-        start: chapter.charStart, end: chapter.charEnd);
+    int start = chapter.charStart;
+    int end = chapter.charEnd;
+    Stream<List<int>> stream;
+    if (end > 0) {
+      stream = FileService.openRead(path,
+          start: chapter.charStart, end: chapter.charEnd);
+    } else {
+      stream = FileService.openRead(path, start: chapter.charStart);
+    }
     // MyLog.d("loadChapterContent", "_readFileContent end: $chapter");
     ChapterState chapterState =
         ChapterState(book.name ?? "", chapter.title, chapter.index);
@@ -65,8 +73,8 @@ class TxtLoader extends ChapterLoader {
     }
     decoder.initCharset(codeList);
     if (debug.loadChapterLog) {
-      MyLog.d("TxtLoader",
-          "loadChapterContent: ${decoder.charset} (${chapter.charStart}/${chapter.charEnd})");
+      MyLog.d(
+          "TxtLoader", "loadChapterContent: ${decoder.charset} ($start/$end)");
     }
     Iterable<String> iterable = LineSplitter.split(decoder.convert(codeList));
     if (debug.loadChapterLog) {

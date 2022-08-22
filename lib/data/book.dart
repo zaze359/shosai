@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:path/path.dart' as path;
+import 'package:shosai/utils/file_util.dart';
 
 /// Description : 书籍
 /// @author zaze
@@ -74,6 +75,7 @@ class Book {
     name = map['name'];
     extension = map['extension'];
     localPath = map['localPath'];
+    origin = map['origin'] ?? "";
     charset = map['charset'];
     intro = map['intro'];
     latestVisitTime = map['latestVisitTime'] ?? 0;
@@ -93,6 +95,7 @@ class Book {
       'id': id,
       'name': name,
       'extension': extension,
+      'origin': origin,
       'localPath': localPath,
       'charset': charset,
       'intro': intro,
@@ -112,6 +115,7 @@ class Book {
   bool isLocal() {
     return origin.isEmpty;
   }
+
   @override
   String toString() => '''
   书籍信息:
@@ -120,13 +124,13 @@ class Book {
   书名: $name
   作者: $author
   标签: $tags
+  来源: $origin
   简介: $intro
   字数: $wordCount
   最新章节: $latestChapterTitle
   更新时间: $updateTime
   封面地址: $coverUrl
   目录列表: $tocUrl
-  来源: $origin
   本地存储地址: $localPath
   文件后缀: $extension
   字符编码: $charset
@@ -157,13 +161,17 @@ class BookChapter {
   /// 章节从文本的到第几个字节结束
   int charEnd;
 
+  /// 若是远程加载的，每个章节本地存储路径
+  String? localPath;
+
   BookChapter(
       {required this.bookId,
       required this.index,
       required this.title,
       this.url,
       this.charStart = 0,
-      this.charEnd = 0});
+      this.charEnd = 0,
+      this.localPath});
 
   void reset(
       {required int index, required String title, required int charStart}) {
@@ -178,13 +186,15 @@ class BookChapter {
       bookId: bookId,
       index: index,
       title: title,
+      url: url,
       charStart: charStart,
       charEnd: charEnd,
+      localPath: localPath,
     );
   }
 
   @override
   String toString() {
-    return 'BookChapter{bookUrl: $bookId, url: $url, index: $index, title: $title, charStart: $charStart, charEnd: $charEnd}';
+    return 'BookChapter{bookId: $bookId, url: $url, index: $index, title: $title, charStart: $charStart, charEnd: $charEnd, localPath: $localPath}';
   }
 }

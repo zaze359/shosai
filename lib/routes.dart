@@ -41,7 +41,7 @@ class AppRoutes {
 
   /// 打开搜索页
   static Future<dynamic> startBookSearchPage(
-      BuildContext context, BookSource source) {
+      BuildContext context, [BookSource? source]) {
     return pushNamed(context, _bookSearchPage, arguments: source);
   }
 

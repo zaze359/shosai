@@ -7,39 +7,39 @@ import 'package:shosai/utils/charsets.dart';
 import 'package:shosai/utils/log.dart';
 
 class FileService {
-  static Future<Directory> _getRootDir(DirectoryType storageType) async {
+  static Future<String> getRootDir(DirectoryType storageType) async {
     switch (storageType) {
       case DirectoryType.cache:
-        return await path_provider.getTemporaryDirectory();
+        return (await path_provider.getTemporaryDirectory()).absolute.path;
       case DirectoryType.document:
-        return await path_provider.getApplicationDocumentsDirectory();
+        return (await path_provider.getApplicationDocumentsDirectory()).absolute.path;
       case DirectoryType.support:
-        return await path_provider.getApplicationSupportDirectory();
+        return (await path_provider.getApplicationSupportDirectory()).absolute.path;
       case DirectoryType.external:
-        return await path_provider.getExternalStorageDirectory() ??
-            await path_provider.getApplicationDocumentsDirectory();
+        return (await path_provider.getExternalStorageDirectory() ??
+            await path_provider.getApplicationDocumentsDirectory()).absolute.path;
     }
   }
 
-  static Future<Directory> cacheDir() {
-    return _getRootDir(DirectoryType.cache);
+  static Future<String> cacheDir() {
+    return getRootDir(DirectoryType.cache);
   }
 
-  static Future<Directory> documentDir() {
-    return _getRootDir(DirectoryType.document);
+  static Future<String> documentDir() {
+    return getRootDir(DirectoryType.document);
   }
 
-  static Future<Directory> supportDir() {
-    return _getRootDir(DirectoryType.support);
+  static Future<String> supportDir() {
+    return getRootDir(DirectoryType.support);
   }
 
-  static Future<Directory> externalDir() {
-    return _getRootDir(DirectoryType.external);
+  static Future<String> externalDir() {
+    return getRootDir(DirectoryType.external);
   }
 
   /// 拼接路径
   static Future<String> joinPath(DirectoryType storageType, String path) async {
-    return "${(await _getRootDir(storageType)).path}/$path";
+    return "${(await getRootDir(storageType))}/$path";
   }
 
   // Future<String> get _localPath async {
@@ -161,18 +161,24 @@ class FileService {
 
   static Stream<List<int>> openRead(String? localPath, {int? start, int? end}) {
     try {
-      if (localPath == null || localPath.isEmpty) {
+      if(!isExists(localPath)) {
         return const Stream.empty();
       }
-      File file = File(localPath);
-      if (!file.existsSync()) {
-        return const Stream.empty();
-      }
+      File file = File(localPath!);
       return file.openRead(start, end);
     } catch (e) {
       return const Stream.empty();
     }
   }
+
+  static bool isExists(String? localPath) {
+    if(localPath == null || localPath.isEmpty) {
+      return false;
+    }
+    File file = File(localPath);
+    return file.existsSync();
+  }
+
 
   /// read [content] from [path] file。
   static Future<String> readAsString(String path,

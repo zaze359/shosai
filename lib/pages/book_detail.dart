@@ -3,7 +3,8 @@ import 'package:shosai/data/book.dart';
 import 'package:shosai/data/book_source.dart';
 import 'package:shosai/data/repository/book_repository.dart';
 import 'package:shosai/routes.dart';
-import 'package:shosai/utils/http.dart';
+import 'package:shosai/service/book_service.dart';
+import 'package:shosai/utils/http/http.dart';
 import 'package:shosai/utils/log.dart';
 import 'package:shosai/widgets/book_parts.dart';
 import 'package:shosai/widgets/loading_widget.dart';
@@ -18,6 +19,8 @@ class BookDetailPage extends StatefulWidget {
 
 class _BookDetailPageState extends State<BookDetailPage> {
   Book? book;
+
+  bool inBookShelf = false;
 
   @override
   Widget build(BuildContext context) {
@@ -40,109 +43,194 @@ class _BookDetailPageState extends State<BookDetailPage> {
     if (book == null) {
       return book;
     }
-    BookSource? bookSource =
-        await BookRepository().queryBookSource(book.origin);
-    return httpHelper.requestBookInfo(book, bookSource);
+    var bookRepository = BookRepository();
+    inBookShelf = (await bookRepository.queryBook(book.id)).isNotEmpty;
+    printD("_requestBookInfo inBookShelf: $inBookShelf");
+    BookSource? bookSource = await bookRepository.queryBookSource(book.origin);
+    return bookService.requestBookInfo(book, bookSource);
   }
 
   _body(Book? book) {
-    double paddingLeft = 8;
-    double paddingRight = 8;
     if (book == null) {
       return null;
     } else {
-      return SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: EdgeInsets.fromLTRB(paddingLeft, 8, paddingRight, 8),
-              child: Row(
-                children: [
-                  SizedBox(
-                    height: 160,
-                    child: BookCover(book),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(8, 0, 4, 0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
+      return Column(
+        children: [
+          Expanded(child: _scroll(book)),
+          _OperatorWidget(book, inBookShelf),
+        ],
+      );
+    }
+  }
+
+  Widget _scroll(Book book) {
+    double paddingLeft = 8;
+    double paddingRight = 8;
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: EdgeInsets.fromLTRB(paddingLeft, 8, paddingRight, 8),
+            child: Row(
+              children: [
+                SizedBox(
+                  height: 160,
+                  child: BookCover(book),
+                ),
+                Padding(
+                  padding: EdgeInsets.fromLTRB(8, 0, 4, 0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        book.name ?? "",
+                        style: TextStyle(fontSize: 16, color: Colors.black),
+                      ),
+                      if (book.author?.isNotEmpty == true)
                         Text(
-                          book.name ?? "",
-                          style: TextStyle(fontSize: 16, color: Colors.black),
-                        ),
-                        if (book.author?.isNotEmpty == true)
-                          Text(
-                            book.author ?? "",
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(fontSize: 14, color: Colors.black),
-                          ),
-                        Text(
-                          book.wordCount ?? "",
+                          book.author ?? "",
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(fontSize: 14, color: Colors.black),
                         ),
-                        // Text(
-                        //   book.wordCount ?? "",
-                        //   maxLines: 1,
-                        //   overflow: TextOverflow.ellipsis,
-                        //   style: TextStyle(fontSize: 14, color: Colors.black),
-                        // ),
-                      ],
-                    ),
-                  )
-                ],
-              ),
-            ),
-            const Divider(
-              height: 10,
-              thickness: 10,
-              indent: 0,
-              color: Colors.black12,
-            ),
-            _TocContainer(book),
-            const Divider(
-              color: Colors.black12,
-            ),
-            Padding(
-              padding: EdgeInsets.fromLTRB(paddingLeft, 4, paddingRight, 10),
-              child: BookTag(book),
-            ),
-            const Divider(
-              height: 10,
-              thickness: 10,
-              indent: 0,
-              color: Colors.black12,
-            ),
-            Container(
-              padding: EdgeInsets.fromLTRB(paddingLeft, 12, paddingRight, 12),
-              child: Column(
-                children: [
-                  const Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      "简介",
-                      style: TextStyle(fontSize: 18, color: Colors.black),
-                    ),
+                      Text(
+                        book.wordCount ?? "",
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontSize: 14, color: Colors.black),
+                      ),
+                      // Text(
+                      //   book.wordCount ?? "",
+                      //   maxLines: 1,
+                      //   overflow: TextOverflow.ellipsis,
+                      //   style: TextStyle(fontSize: 14, color: Colors.black),
+                      // ),
+                    ],
                   ),
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(0, 10, 0, 0),
-                    child: Text(
-                      book.intro ?? "",
-                      // overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: 16, color: Colors.black54),
-                    ),
-                  )
-                ],
+                )
+              ],
+            ),
+          ),
+          const Divider(
+            height: 10,
+            thickness: 10,
+            indent: 0,
+            color: Colors.black12,
+          ),
+          _TocContainer(book),
+          const Divider(
+            color: Colors.black12,
+          ),
+          Padding(
+            padding: EdgeInsets.fromLTRB(paddingLeft, 4, paddingRight, 10),
+            child: BookTag(book),
+          ),
+          const Divider(
+            height: 10,
+            thickness: 10,
+            indent: 0,
+            color: Colors.black12,
+          ),
+          Container(
+            padding: EdgeInsets.fromLTRB(paddingLeft, 12, paddingRight, 12),
+            child: Column(
+              children: [
+                const Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    "简介",
+                    style: TextStyle(fontSize: 18, color: Colors.black),
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.fromLTRB(0, 10, 0, 0),
+                  child: Text(
+                    book.intro ?? "",
+                    // overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 16, color: Colors.black54),
+                  ),
+                )
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _OperatorWidget extends StatefulWidget {
+  Book book;
+  bool inBookShelf;
+
+  _OperatorWidget(this.book, this.inBookShelf);
+
+  @override
+  State<StatefulWidget> createState() {
+    return _OperatorWidgetState();
+  }
+}
+
+class _OperatorWidgetState extends State<_OperatorWidget> {
+  _addToBookShelf(Book book) async {
+    printD("_addToBookShelf");
+    await BookRepository().insertOrUpdateBook(book);
+    setState(() {
+      widget.inBookShelf = true;
+    });
+  }
+
+  _removeFromBookShelf(Book book) async {
+    printD("_removeFromBookShelf");
+    await BookRepository().deleteBook(book);
+    setState(() {
+      widget.inBookShelf = false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Expanded(
+          child: Padding(
+            padding: EdgeInsets.all(8),
+            child: ElevatedButton(
+              onPressed: () {
+                if (widget.inBookShelf) {
+                  _removeFromBookShelf(widget.book);
+                } else {
+                  _addToBookShelf(widget.book);
+                }
+              },
+              style: TextButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24.0),
+                ),
               ),
-            )
-          ],
+              child: Text(widget.inBookShelf ? "移除书架" : "加入书架"),
+            ),
+          ),
         ),
-      );
-    }
+        Expanded(
+          child: Padding(
+            padding: EdgeInsets.all(8),
+            child: ElevatedButton(
+              onPressed: () {},
+              style: TextButton.styleFrom(
+                backgroundColor: Colors.red,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24.0),
+                ),
+              ),
+              child: Text("阅读"),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }
 
@@ -168,7 +256,7 @@ class _TocContainerState extends State<_TocContainer> {
       BookRepository bookRepository = BookRepository();
       BookSource? bookSource =
           await bookRepository.queryBookSource(widget.book.origin);
-      tocList = await httpHelper.requestToc(widget.book, bookSource);
+      tocList = await bookService.requestToc(widget.book, bookSource);
       await bookRepository.insertChapters(tocList);
       if (tocList.isNotEmpty) {
         latestChapterTitle = tocList[0].title;

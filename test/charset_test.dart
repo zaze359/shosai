@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:charset/charset.dart';
 import 'package:shosai/utils/charsets.dart';
 import 'package:shosai/utils/file_util.dart';
+import 'package:shosai/utils/utils.dart';
 
 void main() async {
   List<int> chars = [
@@ -34,11 +35,11 @@ void main() async {
   print("matchCharset: ${File("test/chars.txt").absolute.path}");
   Stream<List<int>> stream = FileService.openRead("test/chars.txt");
   chars.clear();
-
-
   await for (var e in stream) {
     chars.addAll(e);
   }
+
+  ///
   print("matchCharset: ${chars.length}, ${CharsetCodec.matchCharset(chars)}");
 }
 

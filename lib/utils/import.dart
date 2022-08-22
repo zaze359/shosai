@@ -4,6 +4,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shosai/utils/log.dart';
+import 'package:shosai/utils/utils.dart';
 
 /// 从本地导入书籍
 Future<List<File>> importBookFormLocal() async {
@@ -16,7 +17,7 @@ Future<List<File>> importBookFormLocal() async {
 
 Future<List<File>> importFiles() async {
   MyLog.d("import", "importFiles start");
-  bool isGranted = await _checkPermission();
+  bool isGranted = await Utils.checkPermission();
   List<File> files = [];
   if (isGranted) {
     List<PlatformFile>? _paths = (await FilePicker.platform.pickFiles(
@@ -39,7 +40,7 @@ Future<List<File>> importFiles() async {
 
 Future<List<File>> importDirectory() async {
   MyLog.d("import", "importDirectory start");
-  bool isGranted = await _checkPermission();
+  bool isGranted = await Utils.checkPermission();
   List<File> files = [];
   if (isGranted) {
     String? selectedDirectory = await FilePicker.platform.getDirectoryPath();
@@ -55,24 +56,6 @@ Future<List<File>> importDirectory() async {
   }
   MyLog.d("import", "importDirectory: $files");
   return files;
-}
-
-Future<bool> _checkPermission() async {
-  MyLog.d("import", "_checkPermission: ${Platform.environment}");
-  if (Platform.isAndroid) {
-    MyLog.d("import",
-        "_checkPermission storage: ${await Permission.storage.request()}");
-    AndroidDeviceInfo? info = await (DeviceInfoPlugin().androidInfo);
-    if ((info.version.sdkInt ?? 0) >= 31) {
-      MyLog.d("import",
-          "_checkPermission manageExternalStorage: ${await Permission.manageExternalStorage.request()}");
-      return await Permission.storage.isGranted &&
-          await Permission.manageExternalStorage.isGranted;
-    }
-    return await Permission.storage.isGranted;
-  } else {
-    return true;
-  }
 }
 
 void remote() {}

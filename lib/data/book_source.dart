@@ -33,6 +33,9 @@ class BookSource {
   /// 书籍信息规则
   BookInfoRule bookInfoRule = BookInfoRule();
 
+  /// 章节内容规则
+  ContentRule contentRule = ContentRule();
+
   // 最近更新时间
   int lastUpdateTime = 0;
 
@@ -508,6 +511,9 @@ class TocRule {
   }
 }
 
+/// Description :
+/// @author zaze
+/// @date 2022/8/5 - 7:30
 class BookInfoRule {
   BookRule author = BookRule(ruleName: "作者");
   BookRule coverUrl = BookRule(ruleName: "封面");
@@ -547,4 +553,13 @@ class BookInfoRule {
   String toString() {
     return 'BookInfoRule{author: $author, coverUrl: $coverUrl, intro: $intro, kind: $tags, lastChapter: $lastChapter, name: $name, tocUrl: $tocUrl}';
   }
+}
+
+/// Description : 章节内容规则
+/// @author zaze
+/// @date 2022/8/5 - 7:47
+class ContentRule {
+  BookRule content = BookRule(ruleName: "内容");
+  // BookRule replaceRegex = BookRule(ruleName: "替换规则");
+
 }

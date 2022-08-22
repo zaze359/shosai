@@ -3,10 +3,13 @@ import 'package:flutter/services.dart';
 import 'package:shosai/data/book_source.dart';
 import 'package:shosai/data/repository/book_repository.dart';
 import 'package:shosai/routes.dart';
-import 'package:shosai/utils/http.dart';
+import 'package:shosai/utils/http/http.dart';
 import 'package:shosai/utils/log.dart';
 import 'package:shosai/utils/rule_convert.dart';
 
+/// Description : 书源页
+/// @author zaze
+/// @date 2022/8/23 - 3:52
 class BookSourcePage extends StatefulWidget {
   const BookSourcePage({Key? key}) : super(key: key);
 

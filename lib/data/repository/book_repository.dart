@@ -58,7 +58,7 @@ class BookRepository {
         await _dropTables(db);
         await _createTables(db);
       },
-      version: 2,
+      version: 3,
     );
     return _database!;
   }
@@ -90,12 +90,23 @@ class BookRepository {
         .delete(await _openDb(), where: "id = ?", whereArgs: [book.id]);
   }
 
+  /// 删除书籍
+  Future<List<Book>> queryBook(String bookId) async {
+    return _bookTable
+        .query(await _openDb(), where: "id = ?", whereArgs: [bookId]);
+  }
+
   /// 查询所有书籍
   Future<List<Book>> queryAllBooks() async {
     return _bookTable.query(await _openDb(), orderBy: 'latestVisitTime DESC');
   }
 
   // --------------------------------------------------
+  /// 新增或更新章节信息
+  Future<int> insertOrUpdateChapter(BookChapter chapter) async {
+    return _bookChapterTable.insertOrUpdate(await _openDb(), chapter);
+  }
+
   /// 插入或更新章节信息
   Future<List<Object?>> insertChapters(List<BookChapter> chapters) async {
     return _bookChapterTable.batchInsert(await _openDb(), chapters);

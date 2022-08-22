@@ -8,6 +8,8 @@ import 'package:shosai/pages/read_model.dart';
 import 'package:shosai/routes.dart';
 import 'package:shosai/utils/custom_event.dart';
 import 'package:shosai/utils/log.dart';
+import 'package:shosai/utils/utils.dart';
+import 'package:shosai/widgets/loading_widget.dart';
 
 /// 书籍阅读界面
 class BookReaderPage extends StatelessWidget {
@@ -38,13 +40,23 @@ class BookReaderPage extends StatelessWidget {
             elevation: 0,
             toolbarHeight: 0,
           ),
-          body: Stack(
-            children: [
-              SafeArea(
-                child: _ReadView(),
-              ),
-              _MenuWidget(book)
-            ],
+          body: LoadingBuild<bool>.circle(
+            future: Utils.checkPermission(),
+            success: (c, v) {
+              if (v == true) {
+                return Stack(
+                  children: [
+                    SafeArea(
+                      child: _ReadView(),
+                    ),
+                    _MenuWidget(book)
+                  ],
+                );
+              } else {
+                Navigator.of(context).pop();
+                return const Text("请求文件读取权限");
+              }
+            },
           ),
         ),
       ),
@@ -53,7 +65,6 @@ class BookReaderPage extends StatelessWidget {
 }
 
 class _ReadView extends StatefulWidget {
-
   @override
   State<StatefulWidget> createState() {
     return _ReadViewState();

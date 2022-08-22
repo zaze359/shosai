@@ -7,7 +7,7 @@ import 'package:shosai/data/book_source.dart';
 import 'package:shosai/data/repository/book_repository.dart';
 import 'package:shosai/pages/search_bar.dart';
 import 'package:shosai/routes.dart';
-import 'package:shosai/utils/http.dart';
+import 'package:shosai/utils/http/http.dart';
 import 'package:shosai/utils/log.dart';
 import 'package:shosai/widgets/request_args_layout.dart';
 
