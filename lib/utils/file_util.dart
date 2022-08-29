@@ -88,8 +88,8 @@ class FileService {
 
   /// create directory
   static Future<bool> createDirectory(String path,
-      {bool recursive = false,
-      bool externalStorage = false,
+      {bool recursive = true,
+      bool externalStorage = true,
       bool manageExternal = false}) async {
     MyLog.d("createDirectory", "$path;");
     if (path.isEmpty) {
@@ -119,28 +119,30 @@ class FileService {
   /// delete directory
   static Future<bool> deleteDirectory(String path,
       {bool recursive = false,
-      bool externalStorage = false,
-      bool manageExternal = false}) async {
-    MyLog.d("createDirectory", "$path; $recursive");
+      bool externalStorage = true,
+      bool manageExternal = true}) async {
+    MyLog.d("deleteDirectory", "$path; $recursive");
     if (path.isEmpty) {
       return false;
     }
     if (!await checkPermission(
         externalStorage: externalStorage, manageExternal: manageExternal)) {
+      MyLog.d("deleteDirectory", "$path checkPermission false");
       return false;
     }
     if (await FileSystemEntity.isFile(path)) {
-      MyLog.d("createDirectory", "$path is exists a file");
+      MyLog.d("deleteDirectory", "$path is exists a file");
+      deleteFile(path, externalStorage: externalStorage, manageExternal: manageExternal);
       return false;
     }
     try {
       Directory directory = Directory(path);
-      if (!directory.existsSync()) {
-        directory.createSync(recursive: recursive);
+      if (directory.existsSync()) {
+        directory.deleteSync(recursive: recursive);
       }
       return true;
     } catch (e) {
-      MyLog.d("createDirectory", "error: $e; [$path]");
+      MyLog.d("deleteDirectory", "error: $e; [$path]");
       return false;
     }
   }
@@ -203,16 +205,16 @@ class FileService {
 
   /// write [content] into [path] file。
   static Future<File> writeAsString(String path, String content,
-      {bool externalStorage = false, bool manageExternal = false}) async {
+      {bool externalStorage = false, bool manageExternal = false, FileMode mode = FileMode.write}) async {
     File file = File(path);
     if (!await checkPermission(
         externalStorage: externalStorage, manageExternal: manageExternal)) {
       return file;
     }
     if (!file.existsSync()) {
-      file.createSync();
+      file.createSync(recursive: true);
     }
-    return file.writeAsString(content);
+    return file.writeAsString(content, mode: mode);
   }
 
   /// write [content] into [path] file。

@@ -5,7 +5,7 @@ bool matchTocLog = false;
 bool matchChaptersLog = false;
 
 /// 章节加载相关日志
-bool loadChapterLog = false;
+bool loadChapterLog = true;
 
 /// 测量文本相关日志
 bool measureTextLog = false;

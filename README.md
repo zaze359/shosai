@@ -6,11 +6,55 @@
 
 [zaze359/shosai (github.com)](https://github.com/zaze359/shosai)
 
+## 常用脚本记录
+
+```shell
+# 查看所有分支
+flutter channel
+# 切换分支
+flutter channel master
+
+# 更新flutter sdk 和依赖包
+flutter upgrade
+# 仅更新packages
+flutter pub upgrade
+# 查看需要更新内容
+flutter pub outdated
+
+# 查看可用模拟器
+flutter emulators
+# 启动指定模拟器
+flutter emulators --launch apple_ios_simulator
+# macos也可使用一下命令打开ios模拟器
+open -a Simulator
+# 运行flutter项目
+flutter run
+```
+
+### 更新Json
+
+> 执行失败，删除*.g.dart
+
+```shell
+## 项目脚本
+./build_json.sh
+## flutter指令
+flutter pub run build_runner build
+```
+
+
+
 ## 项目功能规划列表
 
-*   [x] 书架列表
-*   [x] 本地书籍导入
-*   [ ] txt文件编码格式
+*   [x] 书架
+    *   [x] 书籍列表显示
+    *   [x] 本地书籍导入
+    *   [x] 书源书籍导入
+    *   [x] 移除书籍
+    *   [x] 加入书籍
+    *   [x] 本地书籍文件删除
+
+*   [x] txt文件编码格式
 
     *   [x] utf-8
 
@@ -48,7 +92,7 @@
     *   [x] 书源内搜索
     *   [x] 书籍详情页展示
     *   [x] 章节下载和存储
-    *   [ ] 章节内容净化
+    *   [x] 章节内容解析
 *   [ ] 阅读历史
 *   [ ] epub支持
 *   [ ] pdf支持

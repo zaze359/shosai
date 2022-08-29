@@ -58,7 +58,7 @@ class BookRepository {
         await _dropTables(db);
         await _createTables(db);
       },
-      version: 3,
+      version: 4,
     );
     return _database!;
   }

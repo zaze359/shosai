@@ -74,7 +74,11 @@ class _PageContent extends StatefulWidget {
   List<PageState> pages;
 
   // 不复用，保证initialPage能生效
-  _PageContent(this.initialPage, this.pages) : super(key: UniqueKey());
+  _PageContent(this.initialPage, this.pages) : super(key: UniqueKey()) {
+    if (pages.isEmpty) {
+      pages.add(PageState.empty());
+    }
+  }
 
   @override
   State<StatefulWidget> createState() {
@@ -99,7 +103,7 @@ class _PageContentState extends State<_PageContent> {
 
   @override
   Widget build(BuildContext context) {
-    MyLog.d("_PageContentState build");
+    MyLog.d("_PageContentState build pages: ${widget.pages.length}");
     return PageView.builder(
       controller: controller,
       scrollDirection: Axis.horizontal,

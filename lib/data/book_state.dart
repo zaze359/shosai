@@ -106,7 +106,7 @@ class PageState {
       : pageIndex = 0,
         bookName = "",
         chapterIndex = 0,
-        chapterTitle = "",
+        chapterTitle = "未获取到内容",
         chapterSize = 1;
 
   List<PageLine> lines = [];

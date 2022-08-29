@@ -49,7 +49,7 @@ class TxtLoader extends ChapterLoader {
   @override
   Future<ChapterState> loadChapterContent(
       String? path, BookChapter chapter) async {
-    // MyLog.d("loadChapterContent", "_readFileContent start: $chapter");
+    MyLog.d("loadChapterContent", "_readFileContent start: $chapter");
     int start = chapter.charStart;
     int end = chapter.charEnd;
     Stream<List<int>> stream;

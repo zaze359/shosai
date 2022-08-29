@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:shosai/data/book.dart';
 import 'package:shosai/data/book_config.dart';
+import 'package:shosai/data/book_source.dart';
 import 'package:shosai/data/book_state.dart';
 import 'package:shosai/data/repository/book_repository.dart';
 import 'package:shosai/service/book_service.dart';
@@ -12,6 +13,8 @@ import '../log.dart';
 
 class BookLoader {
   final Book _book;
+
+  BookSource? bookSource;
 
   BookLoader(this._book);
 
@@ -32,7 +35,7 @@ class BookLoader {
         await _bookRepository.queryBookChapters(_book.id);
     if (!_book.isLocal()) {
       MyLog.d("BookLoader", "initBook from remote");
-      // _downloadChapter(bookChapters);
+      bookSource ??= await _bookRepository.queryBookSource(_book.origin);
     } else if (bookChapters.isEmpty) {
       String? localPath = _book.localPath;
       MyLog.d("BookLoader", "initBook from local $localPath");
@@ -50,19 +53,22 @@ class BookLoader {
     return readingState;
   }
 
-  Future<bool> _downloadChapter(List<BookChapter> chapters) {
+  Future<bool> _downloadChapter(
+      BookSource? bookSource, List<BookChapter> chapters) {
     if (chapters.isEmpty) {
       return Future.value(false);
     }
     Completer<bool> completer = Completer();
     for (var chapter in chapters) {
       bookService.downloadChapter(
+        bookSource,
         chapter,
         onStart: (total) {
           MyLog.d("_downloadChapter ${chapter.title} onStart");
         },
         onSuccess: (savePath) {
           MyLog.d("_downloadChapter ${chapter.title} onSuccess");
+          chapter.localPath = savePath;
           completer.complete(true);
         },
         onFailure: (code, msg, savePath) {
@@ -102,8 +108,10 @@ class BookLoader {
     _loadingChapter.add(chapter.index);
     Future<ChapterState> chapterFuture;
     if (!_book.isLocal()) {
-      await _downloadChapter([chapter]);
-      chapterFuture = _fileLoader.loadChapterContent(chapter.localPath, chapter);
+      bookSource ??= await _bookRepository.queryBookSource(_book.origin);
+      await _downloadChapter(bookSource, [chapter]);
+      chapterFuture =
+          _fileLoader.loadChapterContent(chapter.localPath, chapter);
     } else {
       chapterFuture = _fileLoader.loadChapterContent(_book.localPath, chapter);
     }

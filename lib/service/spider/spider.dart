@@ -52,6 +52,10 @@ class SpiderPage extends StatelessWidget {
         "目录",
         style: tabStyle,
       ): _BookToc(),
+      Text(
+        "正文",
+        style: tabStyle,
+      ): _BookContent(),
     };
     BookSource? bookSource =
         ModalRoute.of(context)?.settings.arguments as BookSource?;
@@ -424,6 +428,39 @@ class _BookToc extends StatelessWidget {
   }
 }
 
+/// 正文
+class _BookContent extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<_SpiderMode>(
+      builder: (c, mode, _) {
+        BookSource bookSource = mode.bookSource;
+        ContentRule rule = bookSource.contentRule;
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(8),
+          child: Form(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _MyTextFormField(
+                  decoration: const InputDecoration(
+                    labelText: "正文规则",
+                  ),
+                  initialValue: rule.content.rule ?? "",
+                  onChanged: (value) {
+                    rule.content.rule = value;
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+///
 class _MyTextFormField extends StatelessWidget {
   String? initialValue;
   InputDecoration? decoration;

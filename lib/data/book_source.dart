@@ -65,6 +65,8 @@ class BookSource {
     tocRule = TocRule.fromJson(jsonDecode(map['tocRule'] ?? "{}"));
     bookInfoRule =
         BookInfoRule.fromJson(jsonDecode(map['bookInfoRule'] ?? "{}"));
+    contentRule =
+        ContentRule.fromJson(jsonDecode(map['contentRule'] ?? "{}"));
     lastUpdateTime = map['lastUpdateTime'] ?? 0;
   }
 
@@ -77,12 +79,13 @@ class BookSource {
         'searchRule': jsonEncode(searchRule),
         'tocRule': jsonEncode(tocRule),
         'bookInfoRule': jsonEncode(bookInfoRule),
+        'contentRule': jsonEncode(contentRule),
         'lastUpdateTime': lastUpdateTime,
       };
 
   @override
   String toString() {
-    return 'BookSource{url: $url, name: $name, tags: $tags, comment: $comment, searchUrl: $searchUrl, searchRule: $searchRule}';
+    return 'BookSource{url: $url, name: $name, tags: $tags, comment: $comment, searchUrl: $searchUrl, searchRule: $searchRule, contentRule: $contentRule}';
   }
 }
 
@@ -207,6 +210,7 @@ class UrlKeys {
   }
 }
 
+@JsonSerializable()
 class BookRule {
   String? rule;
   String? ruleName;
@@ -217,6 +221,11 @@ class BookRule {
   String toString() {
     return '$rule';
   }
+
+  factory BookRule.fromJson(Map<String, dynamic> json) =>
+      _$BookRuleFromJson(json);
+
+  Map<String, dynamic> toJson() => _$BookRuleToJson(this);
 
   String getResult(dynamic element,
       {String separator = "", Pattern? from, String? replace}) {
@@ -296,6 +305,9 @@ class BookRule {
     bookSourceLog("BookRule _executeAttributes: $rule; ${elements.length}");
     switch (rule) {
       case "text":
+      case "textNodes":
+      case "html":
+      case "all":
         break;
       case "href":
       case "src":
@@ -558,8 +570,21 @@ class BookInfoRule {
 /// Description : 章节内容规则
 /// @author zaze
 /// @date 2022/8/5 - 7:47
+
+@JsonSerializable()
 class ContentRule {
   BookRule content = BookRule(ruleName: "内容");
-  // BookRule replaceRegex = BookRule(ruleName: "替换规则");
 
+  // BookRule replaceRegex = BookRule(ruleName: "替换规则");
+  ContentRule();
+
+  factory ContentRule.fromJson(Map<String, dynamic> json) =>
+      _$ContentRuleFromJson(json);
+
+  Map<String, dynamic> toJson() => _$ContentRuleToJson(this);
+
+  @override
+  String toString() {
+    return 'ContentRule{content: $content}';
+  }
 }

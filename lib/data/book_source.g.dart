@@ -16,6 +16,8 @@ BookSource _$BookSourceFromJson(Map<String, dynamic> json) => BookSource(
       ..searchRule = SearchRule.fromJson(json['searchRule'])
       ..tocRule = TocRule.fromJson(json['tocRule'])
       ..bookInfoRule = BookInfoRule.fromJson(json['bookInfoRule'])
+      ..contentRule =
+          ContentRule.fromJson(json['contentRule'] as Map<String, dynamic>)
       ..lastUpdateTime = json['lastUpdateTime'] as int;
 
 Map<String, dynamic> _$BookSourceToJson(BookSource instance) =>
@@ -28,6 +30,7 @@ Map<String, dynamic> _$BookSourceToJson(BookSource instance) =>
       'searchRule': instance.searchRule,
       'tocRule': instance.tocRule,
       'bookInfoRule': instance.bookInfoRule,
+      'contentRule': instance.contentRule,
       'lastUpdateTime': instance.lastUpdateTime,
     };
 
@@ -67,4 +70,22 @@ Map<String, dynamic> _$ParamValueToJson(ParamValue instance) =>
     <String, dynamic>{
       'value': instance.value,
       'encrypt': instance.encrypt,
+    };
+
+BookRule _$BookRuleFromJson(Map<String, dynamic> json) => BookRule(
+      rule: json['rule'] as String?,
+      ruleName: json['ruleName'] as String?,
+    );
+
+Map<String, dynamic> _$BookRuleToJson(BookRule instance) => <String, dynamic>{
+      'rule': instance.rule,
+      'ruleName': instance.ruleName,
+    };
+
+ContentRule _$ContentRuleFromJson(Map<String, dynamic> json) => ContentRule()
+  ..content = BookRule.fromJson(json['content'] as Map<String, dynamic>);
+
+Map<String, dynamic> _$ContentRuleToJson(ContentRule instance) =>
+    <String, dynamic>{
+      'content': instance.content,
     };

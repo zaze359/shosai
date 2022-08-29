@@ -145,7 +145,6 @@ class BookService {
       bookSourceLog("未获取到目录地址");
       return [];
     }
-
     Document document = await domService.requestHtml(
       ZRequest(
         path,
@@ -183,7 +182,7 @@ class BookService {
 
   /// 下载章节内容
   /// [bookChapter] 章节信息
-  downloadChapter(BookChapter chapter,
+  downloadChapter(BookSource? bookSource, BookChapter chapter,
       {OnStart? onStart,
       OnProgress? onProgress,
       OnSuccess? onSuccess,
@@ -192,6 +191,49 @@ class BookService {
     //     "${(await FileService.externalDir())}/${chapter.title}_${chapter.index}.txt";
     String savePath =
         "${await FileService.externalDir()}/${Utils.md5Str(chapter.bookId)}/${chapter.title}_${chapter.index}.txt";
+    String? url = chapter.url;
+    if (url == null || url.isEmpty) {
+      onFailure?.call(-1, "下载地址不能为空", savePath);
+      return;
+    }
+    BookUrl bookUrl = BookUrl.fromJson(jsonDecode(chapter.url!));
+    String? urlPath = bookUrl.path;
+    if (urlPath == null) {
+      onFailure?.call(-1, "无法解析到下载地址", savePath);
+      return;
+    }
+    UrlKeys keys = UrlKeys();
+    ContentRule? contentRule = bookSource?.contentRule;
+
+    Document document = await domService.requestHtml(
+      ZRequest(urlPath,
+          queryParameters: keys.combine(bookUrl.params),
+          options: dio.Options(method: bookUrl.method ?? "GET")),
+    );
+    bookSourceLog("开始解析章节内容: $contentRule");
+    String content;
+    if (contentRule != null) {
+      content = contentRule.content.getResult(document);
+    } else {
+      content = document.body?.innerHtml ?? "";
+    }
+    bookSourceLog("章节内容解析结果: $content");
+    bookSourceLog("保存到本地: $savePath");
+    await FileService.writeAsString(savePath, "${chapter.title}\n$content");
+    onSuccess?.call(savePath);
+  }
+
+  /// 下载章节内容
+  /// [bookChapter] 章节信息
+  downloadChapterTxt(BookChapter chapter,
+      {OnStart? onStart,
+      OnProgress? onProgress,
+      OnSuccess? onSuccess,
+      OnFailure? onFailure}) async {
+    // String savePath =
+    //     "${(await FileService.externalDir())}/${chapter.title}_${chapter.index}.txt";
+    String savePath =
+        "${await localDir(chapter.bookId)}/${chapter.title}_${chapter.index}.txt";
     String? url = chapter.url;
     if (url == null || url.isEmpty) {
       onFailure?.call(-1, "下载地址不能为空", savePath ?? "");
@@ -214,5 +256,10 @@ class BookService {
         onSuccess?.call(savePath);
       });
     }, onFailure: onFailure);
+  }
+
+
+  Future<String> localDir(String bookId) async {
+    return "${await FileService.externalDir()}/${Utils.md5Str(bookId)}/";
   }
 }

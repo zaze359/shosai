@@ -5,6 +5,7 @@ import 'package:shosai/utils/custom_event.dart';
 import 'package:shosai/utils/log.dart';
 import 'package:shosai/widgets/loading_widget.dart';
 
+/// 书籍目录页
 class BookTocPage extends StatelessWidget {
   BookTocPage({super.key});
 

@@ -106,6 +106,7 @@ class BookSourceTable extends BaseTable<BookSource> {
         "searchRule TEXT, "
         "tocRule TEXT, "
         "bookInfoRule TEXT, "
+        "contentRule TEXT, "
         "lastUpdateTime INTEGER)";
   }
 
