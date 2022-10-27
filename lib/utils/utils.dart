@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:crypto/crypto.dart' as crypto;
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:shosai/utils/charsets.dart';
 import 'package:shosai/utils/log.dart';
 
 class Utils {

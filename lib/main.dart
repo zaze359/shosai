@@ -45,7 +45,7 @@ class MyApp extends StatelessWidget {
         VisualDensity(horizontal: densityAmt, vertical: densityAmt);
     return MaterialApp(
       navigatorKey: navKey,
-      title: 'Flutter Demo',
+      title: '书斋',
       initialRoute: "/",
       theme: ThemeData(
         brightness: Brightness.light,

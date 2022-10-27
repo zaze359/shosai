@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shosai/data/book.dart';
@@ -5,6 +8,7 @@ import 'package:shosai/data/book_source.dart';
 import 'package:shosai/pages/book_detail.dart';
 import 'package:shosai/pages/book_reader.dart';
 import 'package:shosai/pages/book_search.dart';
+import 'package:shosai/pages/book_source_page.dart';
 import 'package:shosai/pages/book_toc.dart';
 import 'package:shosai/pages/home.dart';
 import 'package:shosai/service/spider/spider.dart';
@@ -16,6 +20,7 @@ class AppRoutes {
   static const String _bookTocPage = '/book/reader/toc';
   static const String _bookSearchPage = '/book/search/';
   static const String _bookDetailPage = '/book/detail/';
+  static const String _bookSourcePage = '/book/source/';
   static const String _spiderPage = '/book/service/spider/';
 
   /// 打开主页
@@ -40,8 +45,8 @@ class AppRoutes {
   }
 
   /// 打开搜索页
-  static Future<dynamic> startBookSearchPage(
-      BuildContext context, [BookSource? source]) {
+  static Future<dynamic> startBookSearchPage(BuildContext context,
+      [BookSource? source]) {
     return pushNamed(context, _bookSearchPage, arguments: source);
   }
 
@@ -71,6 +76,7 @@ class RouteConfiguration {
     AppRoutes._bookSearchPage: (context) => BookSearchPage(),
     AppRoutes._bookDetailPage: (context) => BookDetailPage(),
     AppRoutes._spiderPage: (context) => SpiderPage(),
+    AppRoutes._bookSourcePage: (context) => BookSourcePage(),
   };
 
   static Route<dynamic>? onGenerateRoute(RouteSettings settings) {
@@ -79,6 +85,11 @@ class RouteConfiguration {
         String? routeName = settings.name;
         MyLog.d("MyMaterialPageRoute", "routeName: $routeName");
         // 统一判断一些前置条件再跳转，例如 登录状态等。
+
+        if (kIsWeb == true && routeName == AppRoutes._homePage) {
+          MyLog.d("MyMaterialPageRoute", "当前为web端");
+          routeName = AppRoutes._bookSourcePage;
+        }
         var builder = _routes[routeName];
         MyLog.d("MyMaterialPageRoute", "builder: $builder");
         if (builder == null) {

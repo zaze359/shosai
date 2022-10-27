@@ -29,6 +29,7 @@ class _BookSearchMode extends ChangeNotifier {
       if (bookSource != null) {
         bookSourceLog("指定源中搜索：$bookSource");
         books = await bookService.search(bookSource, UrlKeys(key: key));
+        notifyListeners();
       } else {
         bookSourceLog("所有源中搜索");
         List<BookSource> searchedSources =

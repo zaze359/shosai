@@ -8,7 +8,7 @@ import 'package:shosai/utils/log.dart';
 class ConvertRule {
   Future<List<BookSource>> formLegadoJson(String legadoRule) async {
     legadoRule =
-        await rootBundle.loadString("assets/book_sources.json", cache: false);
+        await rootBundle.loadString("assets/sources/book_sources.json", cache: false);
     if (legadoRule.isEmpty) {
       return [];
     }
