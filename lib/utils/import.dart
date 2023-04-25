@@ -10,6 +10,7 @@ import 'package:shosai/utils/utils.dart';
 Future<List<File>> importBookFormLocal() async {
   if (Platform.isAndroid) {
     return await importDirectory();
+    // return await importFiles();
   } else {
     return await importFiles();
   }
@@ -41,9 +42,11 @@ Future<List<File>> importFiles() async {
 Future<List<File>> importDirectory() async {
   MyLog.d("import", "importDirectory start");
   bool isGranted = await Utils.checkPermission();
+  MyLog.d("import", "checkPermission $isGranted");
   List<File> files = [];
   if (isGranted) {
-    String? selectedDirectory = await FilePicker.platform.getDirectoryPath();
+    String? selectedDirectory =
+        await FilePicker.platform.getDirectoryPath(initialDirectory: "/storage");
     if (selectedDirectory != null) {
       MyLog.d("import", "selectedDirectory: $selectedDirectory");
       Directory(selectedDirectory).listSync().where((element) {
@@ -53,6 +56,8 @@ Future<List<File>> importDirectory() async {
         files.add(File(element.absolute.path));
       });
     }
+  } else {
+    MyLog.d("import", "importDirectory failed permanentlyDenied");
   }
   MyLog.d("import", "importDirectory: $files");
   return files;

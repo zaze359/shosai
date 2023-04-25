@@ -1,17 +1,15 @@
-import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:shosai/data/book.dart';
 import 'package:shosai/data/book_source.dart';
-import 'package:shosai/pages/book_detail.dart';
-import 'package:shosai/pages/book_reader.dart';
-import 'package:shosai/pages/book_search.dart';
-import 'package:shosai/pages/book_source_page.dart';
-import 'package:shosai/pages/book_toc.dart';
-import 'package:shosai/pages/home.dart';
-import 'package:shosai/service/spider/spider.dart';
+import 'package:shosai/feature/detail/book_detail_page.dart';
+import 'package:shosai/feature/read/book_read_page.dart';
+import 'package:shosai/feature/booksource/book_source_page.dart';
+import 'package:shosai/feature/search/book_search_page.dart';
+import 'package:shosai/feature/spider/spider_page.dart';
+import 'package:shosai/feature/toc/book_toc.dart';
+import 'package:shosai/feature/home/home.dart';
 import 'package:shosai/utils/log.dart';
 
 class AppRoutes {
@@ -71,7 +69,7 @@ class RouteConfiguration {
   /// 修改后需要重新运行应用
   static final Map<String, WidgetBuilder> _routes = {
     AppRoutes._homePage: (context) => const HomePage(),
-    AppRoutes._bookReaderPage: (context) => const BookReaderPage(),
+    AppRoutes._bookReaderPage: (context) => const BookReadPage(),
     AppRoutes._bookTocPage: (context) => BookTocPage(),
     AppRoutes._bookSearchPage: (context) => BookSearchPage(),
     AppRoutes._bookDetailPage: (context) => BookDetailPage(),

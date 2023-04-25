@@ -15,7 +15,6 @@ migrate_working_dir/
 *.ipr
 *.iws
 .idea/
-.gradle/
 local.properties
 # The .vscode folder contains launch configuration and tasks you configure in
 # VS Code which you may wish to be included in version control, so this line
@@ -23,6 +22,7 @@ local.properties
 #.vscode/
 
 # Flutter/Dart/Pub related
+/pubspec.lock
 **/doc/api/
 **/ios/Flutter/.last_build_id
 .dart_tool/
@@ -32,6 +32,8 @@ local.properties
 .pub-cache/
 .pub/
 /build/
+
+assets/sources/*
 
 # Symbolication related
 app.*.symbols
@@ -43,3 +45,4 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+

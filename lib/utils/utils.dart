@@ -34,12 +34,31 @@ class Utils {
   }
 
   static Future<bool> checkPermission() async {
-    MyLog.d("checkPermission: ${Platform.environment}");
     if (Platform.isAndroid) {
-      MyLog.d("checkPermission storage: ${await Permission.storage.request()}");
       AndroidDeviceInfo? info = await (DeviceInfoPlugin().androidInfo);
-      if ((info.version.sdkInt ?? 0) >= 31) {
-        MyLog.d("checkPermission manageExternalStorage: ${await Permission.manageExternalStorage.request()}");
+
+      int version = (info.version.sdkInt ?? 0);
+      bool manageExternalStorage = false;
+      bool storage = false;
+      if (version < 33) {
+        storage = (await Permission.storage.request()).isGranted;
+      } else {
+        // 33以后 WRITE_EXTERNAL_STORAGE，READ_EXTERNAL_STORAGE权限 不可用了
+        // 直接置为true，忽略这两个权限
+        storage = true;
+      }
+      if (version >= 31) { // 31开始新增 manageExternalStorage 文件管理权限
+        manageExternalStorage = (await Permission.manageExternalStorage.request()).isGranted;
+      } else {
+        manageExternalStorage = true;
+      }
+      MyLog.d("checkPermission storage: $storage");
+      MyLog.d("checkPermission manageExternalStorage: $manageExternalStorage");
+      return storage && manageExternalStorage;
+
+      if (version >= 31) {
+        MyLog.d("checkPermission manageExternalStorage: ${await Permission
+            .manageExternalStorage.request()}");
         return await Permission.storage.isGranted &&
             await Permission.manageExternalStorage.isGranted;
       }
