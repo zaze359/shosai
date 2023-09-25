@@ -1,7 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:shosai/data/book_source.dart';
+import 'package:shosai/core/model/book_source.dart';
 import 'package:shosai/feature/spider/spider_vm.dart';
 import 'package:shosai/widgets/request_args_layout.dart';
 import 'package:shosai/widgets/text_form_field.dart';

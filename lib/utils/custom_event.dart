@@ -1,5 +1,5 @@
 import 'package:event_bus/event_bus.dart';
-import 'package:shosai/data/book.dart';
+import 'package:shosai/core/model/book.dart';
 
 EventBus eventBus = EventBus();
 

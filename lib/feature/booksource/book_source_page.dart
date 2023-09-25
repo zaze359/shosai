@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:shosai/data/book_source.dart';
-import 'package:shosai/data/repository/book_repository.dart';
+import 'package:shosai/core/common/di.dart';
+import 'package:shosai/core/data/repository/book_repository.dart';
+import 'package:shosai/core/model/book_source.dart';
 import 'package:shosai/routes.dart';
 import 'package:shosai/utils/log.dart';
 import 'package:shosai/utils/rule_convert.dart';
@@ -18,6 +19,8 @@ class BookSourcePage extends StatefulWidget {
 }
 
 class _BookSourcePageState extends State<BookSourcePage> {
+  BookRepository bookRepository = Injector.instance.get<BookRepository>();
+
   @override
   Widget build(BuildContext context) {
     printD("_BookSourcePageState : Build");
@@ -26,7 +29,7 @@ class _BookSourcePageState extends State<BookSourcePage> {
         title: const Text("书源"),
       ),
       body: FutureBuilder<List<BookSource>>(
-        future: BookRepository().queryAllBookSources(),
+        future: bookRepository.queryAllBookSources(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
             if (snapshot.hasError) {

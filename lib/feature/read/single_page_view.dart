@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:shosai/data/book_config.dart';
-import 'package:shosai/data/book_state.dart';
+import 'package:shosai/core/model/book_config.dart';
+import 'package:shosai/core/model/book_state.dart';
 import 'package:shosai/utils/log.dart';
 
 /// 阅读单页界面

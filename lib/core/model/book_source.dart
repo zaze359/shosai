@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:json_annotation/json_annotation.dart';
+import 'package:path/path.dart';
 import 'package:shosai/utils/log.dart';
 import 'package:html/dom.dart';
 
@@ -36,12 +37,27 @@ class BookSource {
   /// 章节内容规则
   ContentRule contentRule = ContentRule();
 
-  // 最近更新时间
+  /// 最近更新时间
   int lastUpdateTime = 0;
+
+  /// 出错次数，越大权重越低，搜索越靠后
+  int errorFlag = 0;
 
   BookSource({this.url = "", this.name = ""})
       : lastUpdateTime = DateTime.now().millisecondsSinceEpoch;
 
+  factory BookSource.fromJson(Map<String, dynamic> json) => _$BookSourceFromJson(json);
+
+  /// toJson 不能放扩展中，json框架 转换时会报错。
+  Map<String, dynamic> toJson() => _$BookSourceToJson(this);
+
+  @override
+  String toString() {
+    return 'BookSource{url: $url, name: $name, tags: $tags, comment: $comment, errorFlag:$errorFlag, searchUrl: $searchUrl, searchRule: $searchRule, contentRule: $contentRule}';
+  }
+}
+
+extension BookSourceExt on BookSource {
   static List<BookSource> fromJsonArray(List<dynamic> jsonArray) {
     List<BookSource> list = [];
     for (var element in jsonArray) {
@@ -50,42 +66,16 @@ class BookSource {
     return list;
   }
 
-  factory BookSource.fromJson(Map<String, dynamic> json) =>
-      _$BookSourceFromJson(json);
-
-  Map<String, dynamic> toJson() => _$BookSourceToJson(this);
-
-  BookSource.fromMap(Map<String, dynamic> map)
-      : url = map['url'],
-        name = map['name'],
-        tags = map['tags'],
-        comment = map['comment'] {
-    searchUrl = BookUrl.fromJson(jsonDecode(map['searchUrl'] ?? "{}"));
-    searchRule = SearchRule.fromJson(jsonDecode(map['searchRule'] ?? "{}"));
-    tocRule = TocRule.fromJson(jsonDecode(map['tocRule'] ?? "{}"));
-    bookInfoRule =
-        BookInfoRule.fromJson(jsonDecode(map['bookInfoRule'] ?? "{}"));
-    contentRule =
-        ContentRule.fromJson(jsonDecode(map['contentRule'] ?? "{}"));
-    lastUpdateTime = map['lastUpdateTime'] ?? 0;
+  void markError() {
+    errorFlag++;
   }
 
-  Map<String, dynamic> toMap() => {
-        'url': url,
-        'name': name,
-        'tags': tags,
-        'comment': comment,
-        'searchUrl': jsonEncode(searchUrl),
-        'searchRule': jsonEncode(searchRule),
-        'tocRule': jsonEncode(tocRule),
-        'bookInfoRule': jsonEncode(bookInfoRule),
-        'contentRule': jsonEncode(contentRule),
-        'lastUpdateTime': lastUpdateTime,
-      };
-
-  @override
-  String toString() {
-    return 'BookSource{url: $url, name: $name, tags: $tags, comment: $comment, searchUrl: $searchUrl, searchRule: $searchRule, contentRule: $contentRule}';
+  /// 成功，直接将 flag 减半
+  /// 曾经失败过，那么最小也得是1
+  void markSuccess() {
+    if (errorFlag > 1) {
+      errorFlag = (errorFlag / 2) as int;
+    }
   }
 }
 
@@ -238,7 +228,7 @@ class BookRule {
     }).where((element) {
       return element.isNotEmpty;
     }).join(separator);
-    return result.replaceAll(from ?? RegExp(r'[\s]+'), replace ?? "");
+    return result.replaceAll(from ?? RegExp(r'\s+'), replace ?? "");
   }
 
   // a@[[0]]@#p@href@###.+\D((\d+)\d{3})\D##https://www.xbiquwx.la/files/article/image/$2/$1/$1s.jpg###
@@ -250,7 +240,8 @@ class BookRule {
       }
       bookSourceLog(" ----------------- BookRule start $ruleName: $rule");
       var css = array[0];
-      List<Element> queryElements = element.querySelectorAll(css);
+      // $get:{h}
+      List<Element> queryElements = _executeSelector([element], css);
       bookSourceLog("BookRule css: $css; ${queryElements.map((e) {
         return e.outerHtml;
       }).join("\n")}");
@@ -291,11 +282,17 @@ class BookRule {
   }
 
   /// Selector相关规则
-  List<Element> _executeSelector(List<Element> elements, String rule) {
+  List<Element> _executeSelector(List<dynamic> elements, String rule) {
     bookSourceLog("BookRule _executeSelector: $rule");
     List<Element> result = [];
     for (var element in elements) {
-      result.addAll(element.querySelectorAll(rule));
+      if (element is Element || element is Document) {
+        try {
+          result.addAll(element.querySelectorAll(rule));
+        } catch (e) {
+          bookSourceLog("BookRule _executeSelector error : $rule >> $e");
+        }
+      }
     }
     return result;
   }
@@ -325,7 +322,7 @@ class BookRule {
   List<Element> _findAttributes(List<Element> elements, String attr) {
     List<Element> result = [];
     for (var element in elements) {
-      print("BookRule _findAttributes $attr : ${element.outerHtml}");
+      bookSourceLog("BookRule _findAttributes $attr : ${element.outerHtml}");
       element.attributes.forEach((k, v) {
         if (k == attr) {
           Element e = Element.tag(element.localName);

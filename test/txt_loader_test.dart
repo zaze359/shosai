@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shosai/data/book.dart';
-import 'package:shosai/data/book_config.dart';
+import 'package:shosai/core/model/book.dart';
+import 'package:shosai/core/model/book_config.dart';
 import 'package:shosai/utils/loader/txt_loader.dart';
 import 'package:shosai/utils/log.dart';
 import 'package:shosai/utils/reg_exp.dart';

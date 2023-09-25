@@ -10,10 +10,10 @@ class KeepAliveWrapper extends StatefulWidget {
   final Widget child;
 
   @override
-  _KeepAliveWrapperState createState() => _KeepAliveWrapperState();
+  KeepAliveWrapperState createState() => KeepAliveWrapperState();
 }
 
-class _KeepAliveWrapperState extends State<KeepAliveWrapper>
+class KeepAliveWrapperState extends State<KeepAliveWrapper>
     with AutomaticKeepAliveClientMixin {
   @override
   Widget build(BuildContext context) {

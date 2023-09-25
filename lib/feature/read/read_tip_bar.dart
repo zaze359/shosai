@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:shosai/data/book_state.dart';
+import 'package:shosai/core/model/book_state.dart';
 
 /// 阅读情况的提示栏
 class ReadTipBar extends StatelessWidget {

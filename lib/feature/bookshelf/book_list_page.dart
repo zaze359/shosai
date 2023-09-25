@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:shosai/data/book.dart';
+import 'package:shosai/core/model/book.dart';
 import 'package:shosai/utils/log.dart';
 import 'package:shosai/widgets/book_parts.dart';
 import 'package:shosai/widgets/cache_layout.dart';
@@ -30,16 +30,14 @@ class BookListPage extends StatelessWidget {
       // crossAxisSpacing: 8,
       childAspectRatio: 0.5,
       children: books
-          .map(
-            (e) => KeepAliveWrapper(
+          .map((e) => KeepAliveWrapper(
               child: _BookGridItem(
                 e,
                 onLongPress: onLongPress,
                 onTap: onTap,
               ),
             ),
-          )
-          .toList(),
+          ).toList(),
     );
   }
 

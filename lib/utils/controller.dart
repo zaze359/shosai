@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:shosai/data/book.dart';
-import 'package:shosai/data/book_state.dart';
+import 'package:shosai/core/model/book.dart';
+import 'package:shosai/core/model/book_state.dart';
 import 'package:shosai/utils/loader/loader.dart';
 import 'package:shosai/utils/log.dart';
 
@@ -15,6 +15,8 @@ class BookController {
   factory BookController() => _instance;
 
   bool _initialized = false;
+
+  List<Book> books = [];
 
   /// 书籍加载器
   BookLoader? _bookLoader;
@@ -80,13 +82,16 @@ class BookController {
   }
 
   /// 初始化
-  init() async {
+  init([Book? book]) async {
+    if(book != null && this.book != book) {
+      this.book = book;
+    }
     MyLog.d("BookController", "init: $_initialized");
     if (!_initialized) {
       _bookState = await _bookLoader?.initBook();
       _initialized = true;
     }
-    return await loadCurChapter();
+    return _bookState;
   }
 
   Future<ChapterState?> loadHistoryChapter() async {
@@ -229,5 +234,10 @@ class BookController {
         _prevChapter = null;
         return true;
     }
+  }
+
+
+  bool isInBookShelf(String bookId) {
+    return books.indexWhere((element) => element.id == bookId) > 0;
   }
 }

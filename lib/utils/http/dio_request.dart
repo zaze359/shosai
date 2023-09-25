@@ -13,22 +13,29 @@ class DioRequest {
     return _request;
   }
 
-  Future<ZResponse> request(ZRequest request) async {
+  Future<ZResponse> request(ZRequest request) {
     // var a = ZRequest(path: "", body : "", queryParameters: null, options : null);
-    dio.Response response = await dio.Dio().request(
-      request.path,
-      data: request.body,
-      options: request.options,
-      queryParameters: request.queryParameters,
-    );
-    return ZResponse(request: request, response: response);
+    return dio.Dio()
+        .request(
+          request.path,
+          data: request.body,
+          options: request.options,
+          queryParameters: request.queryParameters,
+        )
+        .then((value) => ZResponse(request: request, response: value))
+        .onError((error, stackTrace) {
+          if (error is dio.DioError) {
+            return ZResponse(request: request, response: error.response);
+          } else {
+            return ZResponse(request: request, response: null);
+          }
+        });
   }
 
   Future<ZResponse> download(DownloadRequest request,
-      {OnStart? onStart,
-      OnProgress? onProgress}) async {
+      {OnStart? onStart, OnProgress? onProgress}) {
     // var a = ZRequest(path: "", body : "", queryParameters: null, options : null);
-    dio.Response response = await dio.Dio().download(
+    return dio.Dio().download(
       request.path,
       request.savePath,
       options: request.options,
@@ -37,7 +44,12 @@ class DioRequest {
         // TODO speed
         onProgress?.call(count, total, -1);
       },
-    );
-    return ZResponse(request: request, response: response);
+    ).then((value) => ZResponse(request: request, response: value)).onError((error, stackTrace) {
+      if (error is dio.DioError) {
+        return ZResponse(request: request, response: error.response);
+      } else {
+        return ZResponse(request: request, response: null);
+      }
+    });
   }
 }

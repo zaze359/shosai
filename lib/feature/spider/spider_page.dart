@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:shosai/data/book_source.dart';
+import 'package:shosai/core/model/book_source.dart';
 import 'package:shosai/feature/spider/base_rule_editor.dart';
 import 'package:shosai/feature/spider/content_rule_editor.dart';
 import 'package:shosai/feature/spider/detail_rule_editor.dart';
@@ -15,31 +15,31 @@ import 'package:shosai/widgets/search_bar.dart';
 class SpiderPage extends StatelessWidget {
   SpiderPage({Key? key}) : super(key: key);
   TextStyle tabStyle = const TextStyle(fontSize: 18, color: Colors.white);
+  late Map<Widget, Widget> tabMap = {
+    Text(
+      "基本",
+      style: tabStyle,
+    ): BaseRuleEditor(),
+    Text(
+      "搜索",
+      style: tabStyle,
+    ): SearchRuleEditor(),
+    Text(
+      "详情",
+      style: tabStyle,
+    ): DetailRuleEditor(),
+    Text(
+      "目录",
+      style: tabStyle,
+    ): TocRuleEditor(),
+    Text(
+      "正文",
+      style: tabStyle,
+    ): ContentRuleEditor(),
+  };
 
   @override
   Widget build(BuildContext context) {
-    Map<Widget, Widget> tabMap = {
-      Text(
-        "基本",
-        style: tabStyle,
-      ): BaseRuleEditor(),
-      Text(
-        "搜索",
-        style: tabStyle,
-      ): SearchRuleEditor(),
-      Text(
-        "详情",
-        style: tabStyle,
-      ): DetailRuleEditor(),
-      Text(
-        "目录",
-        style: tabStyle,
-      ): TocRuleEditor(),
-      Text(
-        "正文",
-        style: tabStyle,
-      ): ContentRuleEditor(),
-    };
     BookSource? bookSource =
         ModalRoute.of(context)?.settings.arguments as BookSource?;
     if (bookSource == null) {

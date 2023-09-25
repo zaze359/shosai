@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:shosai/data/book.dart';
-import 'package:shosai/data/book_config.dart';
-import 'package:shosai/data/book_state.dart';
+import 'package:shosai/core/model/book.dart';
+import 'package:shosai/core/model/book_config.dart';
+import 'package:shosai/core/model/book_state.dart';
 import 'package:shosai/utils/controller.dart';
 import 'package:shosai/utils/custom_event.dart';
 import 'package:shosai/utils/log.dart';
@@ -39,9 +39,8 @@ class BookReadViewModel with ChangeNotifier, DiagnosticableTreeMixin {
     _updateState(ConnectionState.done);
   }
 
-  ///  0: cur
-  ///  1: next
-  /// -1: prev
+  ///  合并章节
+  ///  0: cur; 1: next; -1: prev
   Future<List<PageState>> composeChapter(int offset) async {
     bookController.moveSomeChapter(offset);
     ChapterState? curChapter = await bookController.loadCurChapter();

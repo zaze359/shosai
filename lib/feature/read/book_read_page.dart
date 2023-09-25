@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:shosai/data/book.dart';
+import 'package:shosai/core/model/book.dart';
 import 'package:shosai/feature/read/horizontal_mode.dart';
 import 'package:shosai/feature/read/book_read_vm.dart';
 import 'package:shosai/routes.dart';

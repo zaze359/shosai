@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:shosai/data/book.dart';
+import 'package:shosai/core/model/book.dart';
+import 'package:shosai/routes.dart';
 import 'package:shosai/utils/controller.dart';
 import 'package:shosai/utils/custom_event.dart';
 import 'package:shosai/utils/log.dart';
@@ -10,10 +11,7 @@ class BookTocPage extends StatelessWidget {
   BookTocPage({super.key});
 
   Future<List<BookChapter>> loadBookChapters(Book? book) async {
-    bookController.book = book;
-    if (book?.isLocal() == false) {
-      await bookController.init();
-    }
+    await bookController.init(book);
     return bookController.getBookChapters();
   }
 

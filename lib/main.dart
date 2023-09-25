@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:shosai/core/common/di.dart';
 import 'package:shosai/routes.dart';
 import 'package:shosai/utils/debug.dart';
 import 'package:shosai/utils/display_util.dart' as display;
@@ -7,6 +8,7 @@ import 'package:shosai/utils/log.dart';
 
 void main() {
   debug();
+  initDi();
   runApp(const MyApp());
   MyLog.d("main", '''
   Display：

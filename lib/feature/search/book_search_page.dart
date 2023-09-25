@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:shosai/data/book_source.dart';
+import 'package:shosai/core/model/book_source.dart';
 import 'package:shosai/feature/bookshelf/book_list_page.dart';
 import 'package:shosai/widgets/search_bar.dart';
 import 'package:shosai/routes.dart';
@@ -9,16 +9,34 @@ import 'book_search_vm.dart';
 
 
 /// 书籍搜索页
-class BookSearchPage extends StatelessWidget {
+class BookSearchPage extends StatefulWidget {
+
+  BookSearchPage({super.key});
+
+  @override
+  State<BookSearchPage> createState() => _BookSearchPageState();
+}
+
+class _BookSearchPageState extends State<BookSearchPage> {
   TextEditingController textEditingController = TextEditingController();
+  late BookSearchViewModel bookViewModel;
+
+
+  @override
+  void dispose() {
+    bookViewModel.stopSearch();
+    bookViewModel.dispose();
+    super.dispose();
+  }
+
 
   @override
   Widget build(BuildContext context) {
-    BookSource? bookSource =
-        ModalRoute.of(context)?.settings.arguments as BookSource?;
+    BookSource? bookSource = ModalRoute.of(context)?.settings.arguments as BookSource?;
+    bookViewModel = BookSearchViewModel(bookSource);
     return ChangeNotifierProvider(
       create: (_) {
-        return BookSearchViewModel(bookSource);
+        return bookViewModel;
       },
       builder: (context, _) {
         return Scaffold(
@@ -26,7 +44,7 @@ class BookSearchPage extends StatelessWidget {
             title: BookSearchBar(
               hintText: '书名',
               onSubmitted: (v) {
-                context.read<BookSearchViewModel>().startSearch(v);
+                bookViewModel.startSearch(v);
               },
               controller: textEditingController,
             ),
@@ -42,9 +60,8 @@ class BookSearchPage extends StatelessWidget {
             //   ),
             // ],
           ),
-          body: Consumer<BookSearchViewModel>(
+          body: Consumer<BookSearchViewModel>( // 数据发生变化时更新
             builder: (c, mode, _) {
-              print("mode : ${mode.books}");
               return BookListPage(
                 mode.books,
                 simple: false,
@@ -56,11 +73,9 @@ class BookSearchPage extends StatelessWidget {
           ),
           floatingActionButton: FloatingActionButton(
             onPressed: () {
-              context
-                  .read<BookSearchViewModel>()
-                  .startSearch(textEditingController.text);
+              bookViewModel.startSearch(textEditingController.text);
             },
-            child: Icon(Icons.stop),
+            child: const Icon(Icons.stop),
           ),
         );
       },

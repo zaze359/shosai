@@ -1,10 +1,11 @@
 import 'dart:async';
 
-import 'package:shosai/data/book.dart';
-import 'package:shosai/data/book_config.dart';
-import 'package:shosai/data/book_source.dart';
-import 'package:shosai/data/book_state.dart';
-import 'package:shosai/data/repository/book_repository.dart';
+import 'package:shosai/core/common/di.dart';
+import 'package:shosai/core/data/repository/book_repository.dart';
+import 'package:shosai/core/model/book.dart';
+import 'package:shosai/core/model/book_config.dart';
+import 'package:shosai/core/model/book_source.dart';
+import 'package:shosai/core/model/book_state.dart';
 import 'package:shosai/service/book_service.dart';
 import 'package:shosai/utils/loader/txt_loader.dart';
 import 'package:shosai/utils/reg_exp.dart' as reg_exp;
@@ -20,7 +21,7 @@ class BookLoader {
 
   /// 文本加载器
   late final TxtLoader _fileLoader = TxtLoader(_book, bookConfig);
-  late final BookRepository _bookRepository = BookRepository();
+  late final BookRepository _bookRepository = Injector.instance.get<BookRepository>();
 
   final Set<int> _loadingChapter = {};
 
@@ -33,10 +34,13 @@ class BookLoader {
     BookState readingState = BookState(_book);
     List<BookChapter> bookChapters =
         await _bookRepository.queryBookChapters(_book.id);
-    if (!_book.isLocal()) {
-      MyLog.d("BookLoader", "initBook from remote");
+    MyLog.d(
+        "BookLoader", "queryBookChapters from db: find ${bookChapters.length}");
+    if (_book.isRemote()) {
+      MyLog.d("BookLoader", "initBook from remote: load bookSource");
       bookSource ??= await _bookRepository.queryBookSource(_book.origin);
     } else if (bookChapters.isEmpty) {
+      // 本地书籍，并且当前无章节信息
       String? localPath = _book.localPath;
       MyLog.d("BookLoader", "initBook from local $localPath");
       if (localPath == null || localPath.isEmpty) {
@@ -45,8 +49,6 @@ class BookLoader {
       bookChapters = await _matchChapters();
       await _bookRepository.insertChapters(bookChapters);
       await _bookRepository.insertOrUpdateBook(_book);
-    } else {
-      MyLog.d("BookLoader", "initBook from db");
     }
     readingState.bookChapters = bookChapters;
     MyLog.d("BookLoader", "initBook end ${_book.name}(${_book.charset})");
@@ -106,16 +108,21 @@ class BookLoader {
       return null;
     }
     _loadingChapter.add(chapter.index);
-    Future<ChapterState> chapterFuture;
-    if (!_book.isLocal()) {
+    String? path;
+    if (_book.isRemote()) {
+      // 远程书籍，需要下载
       bookSource ??= await _bookRepository.queryBookSource(_book.origin);
       await _downloadChapter(bookSource, [chapter]);
-      chapterFuture =
-          _fileLoader.loadChapterContent(chapter.localPath, chapter);
+      path = chapter.localPath;
     } else {
-      chapterFuture = _fileLoader.loadChapterContent(_book.localPath, chapter);
+      path = _book.localPath;
     }
-    return chapterFuture.then((value) {
+    if (_fileLoader.config.isAvoid()) {
+      // 当前配置不可用，暂不加载章节。
+      // 配置会在打开BookReadPage 时被更新。
+      return null;
+    }
+    return _fileLoader.loadChapterContent(path, chapter).then((value) {
       // MyLog.d("BookLoader", "loadChapter end: $chapter");
       _loadingChapter.remove(chapter.index);
       return value;
@@ -130,7 +137,6 @@ class BookLoader {
 // fun loadNextChapter()
 //
 // fun onLoaded(readerPage: ReaderPage)
-
 }
 
 abstract class ChapterLoader {

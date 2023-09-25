@@ -20,6 +20,7 @@ class BookSearchBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
+        print("onTap");
         onSubmitted?.call("");
       },
       child: Container(

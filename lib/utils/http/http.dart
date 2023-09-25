@@ -58,6 +58,9 @@ class ZResponse<T> {
     return statusCode == HttpStatus.ok;
   }
 
+  bool isError() {
+    return !isSuccess();
+  }
   print() {
     bookSourceLog("响应结果: ${response?.statusCode}; charset: $charset");
   }
@@ -85,19 +88,14 @@ class _RealCall {
 }
 
 class _RealRequest implements Interceptor<ZRequest, Future<ZResponse>> {
-  Future<dio.Response> request(
-    String path, {
-    String? body,
-    Map<String, dynamic>? queryParameters,
-    dio.Options? options,
-  }) async {
-    return await dio.Dio().request(
-      path,
-      data: body,
-      options: options,
-      queryParameters: queryParameters,
-    );
-  }
+  // Future<dio.Response> request(String path, {String? body, Map<String, dynamic>? queryParameters, dio.Options? options,}) async {
+  //   return await dio.Dio().request(
+  //     path,
+  //     data: body,
+  //     options: options,
+  //     queryParameters: queryParameters,
+  //   );
+  // }
 
   @override
   Future<ZResponse> intercept(Chain<ZRequest, Future<ZResponse>> chain) async {

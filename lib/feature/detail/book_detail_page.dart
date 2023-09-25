@@ -1,9 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:shosai/data/book.dart';
-import 'package:shosai/data/book_source.dart';
-import 'package:shosai/data/repository/book_repository.dart';
+import 'package:shosai/core/common/di.dart';
+import 'package:shosai/core/data/repository/book_repository.dart';
+import 'package:shosai/core/model/book.dart';
+import 'package:shosai/core/model/book_source.dart';
 import 'package:shosai/routes.dart';
 import 'package:shosai/service/book_service.dart';
+import 'package:shosai/utils/controller.dart';
 import 'package:shosai/utils/custom_event.dart';
 import 'package:shosai/utils/file_util.dart';
 import 'package:shosai/utils/log.dart';
@@ -25,6 +29,26 @@ class BookDetailPage extends StatefulWidget {
 class _BookDetailPageState extends State<BookDetailPage> {
   Book? book;
   BookSource? bookSource;
+  StreamSubscription? subscription;
+  BookRepository bookRepository = Injector.instance.get<BookRepository>();
+
+  @override
+  void initState() {
+    subscription = eventBus.on<ReadEvent>().listen((event) {
+      Navigator.pop(context);
+      Book? curBook = book;
+      if (curBook != null) {
+        AppRoutes.startBookReaderPage(context, curBook);
+      }
+    });
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    subscription?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -48,10 +72,7 @@ class _BookDetailPageState extends State<BookDetailPage> {
     if (book == null || book.isLocal()) {
       return book;
     }
-    if (bookSource == null) {
-      var bookRepository = BookRepository();
-      bookSource = await bookRepository.queryBookSource(book.origin);
-    }
+    bookSource ??= await bookRepository.queryBookSource(book.origin);
     return bookService.requestBookInfo(book, bookSource);
   }
 
@@ -242,19 +263,20 @@ class _TocContainer extends StatefulWidget {
 class _TocContainerState extends State<_TocContainer> {
   List<BookChapter> tocList = [];
   String? latestChapterTitle;
+  BookRepository bookRepository = Injector.instance.get<BookRepository>();
 
+  /// 加载目录
   Future<String?> _loadToc() async {
-    if (widget.book.isLocal()) {
-      //
-    } else {
-      BookRepository bookRepository = BookRepository();
+    if (widget.book.isRemote()) {
       BookSource? bookSource =
           await bookRepository.queryBookSource(widget.book.origin);
       tocList = await bookService.requestToc(widget.book, bookSource);
       await bookRepository.insertChapters(tocList);
-      if (tocList.isNotEmpty) {
-        latestChapterTitle = tocList[0].title;
-      }
+    } else {
+      tocList = (await bookController.init(widget.book))?.bookChapters ?? [];
+    }
+    if (tocList.isNotEmpty) {
+      latestChapterTitle = tocList[0].title;
     }
     return latestChapterTitle;
   }
@@ -310,9 +332,8 @@ class _TocContainerState extends State<_TocContainer> {
 
 class _OperatorWidget extends StatefulWidget {
   final Book book;
-  bool inBookShelf = false;
 
-  _OperatorWidget(this.book);
+  const _OperatorWidget(this.book);
 
   @override
   State<StatefulWidget> createState() {
@@ -321,12 +342,15 @@ class _OperatorWidget extends StatefulWidget {
 }
 
 class _OperatorWidgetState extends State<_OperatorWidget> {
+  bool inBookShelf = false;
+  BookRepository bookRepository = Injector.instance.get<BookRepository>();
+
   _addToBookShelf(Book book) async {
     printD("_addToBookShelf");
-    await BookRepository().insertOrUpdateBook(book);
+    await  bookRepository.insertOrUpdateBook(book);
     eventBus.fire(BookEvent.addBook(book));
     setState(() {
-      widget.inBookShelf = true;
+      inBookShelf = true;
     });
   }
 
@@ -347,72 +371,59 @@ class _OperatorWidgetState extends State<_OperatorWidget> {
       if (book.isLocal()) {
         FileService.deleteFile(book.localPath);
       } else {
-        FileService.deleteDirectory(await bookService.localDir(book.id), recursive: true);
+        FileService.deleteDirectory(await bookService.localDir(book.id),
+            recursive: true);
       }
     }
-    await BookRepository().deleteBook(book);
+    await bookRepository.deleteBook(book);
     eventBus.fire(BookEvent.removeBook(book));
     setState(() {
-      widget.inBookShelf = false;
+      inBookShelf = false;
     });
   }
 
-  Future<bool> _isInBookShelf() async {
-    var bookRepository = BookRepository();
-    widget.inBookShelf =
-        (await bookRepository.queryBook(widget.book.id)).isNotEmpty;
-    printD("_requestBookInfo inBookShelf: ${widget.inBookShelf}");
-    return widget.inBookShelf;
+  @override
+  void initState() {
+    inBookShelf = bookController.isInBookShelf(widget.book.id);
+    super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    return LoadingBuild<bool>(
-      future: _isInBookShelf(),
-      success: (c, v) {
-        return Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(
-              child: Padding(
-                padding: EdgeInsets.all(8),
-                child: ElevatedButton(
-                  onPressed: () {
-                    if (widget.inBookShelf) {
-                      _removeFromBookShelf(widget.book);
-                    } else {
-                      _addToBookShelf(widget.book);
-                    }
-                  },
-                  style: TextButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(24.0),
-                    ),
-                  ),
-                  child: Text(widget.inBookShelf ? "移除书架" : "加入书架"),
-                ),
-              ),
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        _operatorButton(inBookShelf ? "移除书架" : "加入书架", onPressed: () {
+          if (inBookShelf) {
+            _removeFromBookShelf(widget.book);
+          } else {
+            _addToBookShelf(widget.book);
+          }
+        }),
+        _operatorButton("开始阅读", backgroundColor: Colors.red, onPressed: () {
+          AppRoutes.startBookReaderPage(context, widget.book);
+        }),
+      ],
+    );
+  }
+
+  Widget _operatorButton(String text,
+      {Color? backgroundColor, VoidCallback? onPressed}) {
+    return Expanded(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 24.0, horizontal: 12.0),
+        child: ElevatedButton(
+          onPressed: onPressed,
+          style: TextButton.styleFrom(
+            minimumSize: const Size(80, 44),
+            backgroundColor: backgroundColor,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(24.0),
             ),
-            Expanded(
-              child: Padding(
-                padding: EdgeInsets.all(8),
-                child: ElevatedButton(
-                  onPressed: () {
-                    AppRoutes.startBookReaderPage(context, widget.book);
-                  },
-                  style: TextButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(24.0),
-                    ),
-                  ),
-                  child: Text("阅读"),
-                ),
-              ),
-            ),
-          ],
-        );
-      },
+          ),
+          child: Text(text, style: const TextStyle(fontSize: 16)),
+        ),
+      ),
     );
   }
 }

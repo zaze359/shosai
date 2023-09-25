@@ -1,14 +1,14 @@
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:shosai/data/book.dart';
-import 'package:shosai/data/book_source.dart';
+import 'package:shosai/core/model/book.dart';
+import 'package:shosai/core/model/book_source.dart';
 import 'package:shosai/feature/detail/book_detail_page.dart';
 import 'package:shosai/feature/read/book_read_page.dart';
 import 'package:shosai/feature/booksource/book_source_page.dart';
 import 'package:shosai/feature/search/book_search_page.dart';
 import 'package:shosai/feature/spider/spider_page.dart';
-import 'package:shosai/feature/toc/book_toc.dart';
+import 'package:shosai/feature/toc/toc_page.dart';
 import 'package:shosai/feature/home/home.dart';
 import 'package:shosai/utils/log.dart';
 

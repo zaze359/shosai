@@ -1,5 +1,5 @@
 import 'package:flutter/cupertino.dart';
-import 'package:shosai/data/book.dart';
+import 'package:shosai/core/model/book.dart';
 
 /// 书本的阅读状态
 class BookState {

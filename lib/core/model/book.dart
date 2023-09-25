@@ -58,10 +58,25 @@ class Book {
 
   Book({
     required this.id,
-    this.name = "",
-    this.extension = "",
-    this.localPath = "",
+    this.name,
+    this.extension,
+    this.localPath,
+    this.origin = "",
+    this.charset,
+    this.intro,
+    this.author,
+    this.tags,
+    this.wordCount,
+    this.updateTime,
+    this.latestChapterTitle,
+    this.latestCheckTime = 0,
+    this.latestVisitTime = 0,
+    this.importTime = 0,
+    this.coverUrl,
+    this.tocUrl,
   });
+
+  Book.empty(): id = "";
 
   Book.formFile(File file)
       : id = file.uri.toString(),
@@ -70,49 +85,12 @@ class Book {
         localPath = file.path,
         importTime = DateTime.now().millisecondsSinceEpoch;
 
-  Book.fromMap(Map<String, dynamic> map) : id = map['id'] {
-    name = map['name'];
-    extension = map['extension'];
-    localPath = map['localPath'];
-    origin = map['origin'] ?? "";
-    charset = map['charset'];
-    intro = map['intro'];
-    latestVisitTime = map['latestVisitTime'] ?? 0;
-    importTime = map['importTime'] ?? 0;
-    author = map['author'];
-    tags = map['tags'];
-    wordCount = map['wordCount'];
-    updateTime = map['updateTime'];
-    latestChapterTitle = map['latestChapterTitle'];
-    latestCheckTime = map['latestCheckTime'] ?? 0;
-    coverUrl = map['coverUrl'];
-    tocUrl = map['tocUrl'];
-  }
-
-  Map<String, dynamic> toMap() {
-    return {
-      'id': id,
-      'name': name,
-      'extension': extension,
-      'origin': origin,
-      'localPath': localPath,
-      'charset': charset,
-      'intro': intro,
-      'latestVisitTime': latestVisitTime,
-      'importTime': importTime,
-      'author': author,
-      'tags': tags,
-      'wordCount': wordCount,
-      'updateTime': updateTime,
-      'latestChapterTitle': latestChapterTitle,
-      'latestCheckTime': latestCheckTime,
-      'coverUrl': coverUrl,
-      'tocUrl': tocUrl,
-    };
-  }
-
   bool isLocal() {
     return origin.isEmpty;
+  }
+
+  bool isRemote() {
+    return !isLocal();
   }
 
   @override
@@ -160,7 +138,7 @@ class BookChapter {
   /// 章节从文本的到第几个字节结束
   int charEnd;
 
-  /// 若是远程加载的，每个章节本地存储路径
+  /// 若是远程加载的，这个是每个章节本地存储路径
   String? localPath;
 
   BookChapter(

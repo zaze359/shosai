@@ -2,10 +2,9 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:shosai/data/book.dart';
-import 'package:shosai/data/book_state.dart';
+import 'package:shosai/core/model/book.dart';
+import 'package:shosai/core/model/book_state.dart';
 import 'package:shosai/utils/charsets.dart';
-import 'package:shosai/utils/debug.dart' as debug;
 import 'package:shosai/utils/file_util.dart';
 import 'package:shosai/utils/loader/loader.dart';
 import 'package:shosai/utils/log.dart';
@@ -23,15 +22,11 @@ class TxtLoader extends ChapterLoader {
     Stream<List<int>> contentStream = FileService.openRead(book.localPath);
     List<int> codeList = [];
     // 加载完再处理，保证内容完整。
-    if (debug.matchChaptersLog) {
-      MyLog.d("TxtLoader", "matchChapters read content start");
-    }
+    matchChaptersLog("TxtLoader", "matchChapters read content start");
     await for (List<int> element in contentStream) {
       codeList.addAll(element);
     }
-    if (debug.matchChaptersLog) {
-      MyLog.d("TxtLoader", "matchChapters read content end");
-    }
+    matchChaptersLog("TxtLoader", "matchChapters read content end");
     if (codeList.isEmpty) {
       return [];
     }
@@ -47,9 +42,8 @@ class TxtLoader extends ChapterLoader {
   }
 
   @override
-  Future<ChapterState> loadChapterContent(
-      String? path, BookChapter chapter) async {
-    MyLog.d("loadChapterContent", "_readFileContent start: $chapter");
+  Future<ChapterState> loadChapterContent(String? path, BookChapter chapter) async {
+    loadChapterLog("loadChapterContent", "_readFileContent start: $chapter");
     int start = chapter.charStart;
     int end = chapter.charEnd;
     Stream<List<int>> stream;
@@ -71,16 +65,16 @@ class TxtLoader extends ChapterLoader {
     await for (List<int> element in stream) {
       codeList.addAll(element);
     }
+    // 匹配字符集
     decoder.initCharset(codeList);
-    if (debug.loadChapterLog) {
-      MyLog.d(
-          "TxtLoader", "loadChapterContent: ${decoder.charset} ($start/$end)");
-    }
+
+    loadChapterLog("TxtLoader", "loadChapterContent: ${decoder.charset} ($start/$end)");
+
+    // 将 code 转为 一行行的字符串。
     Iterable<String> iterable = LineSplitter.split(decoder.convert(codeList));
-    if (debug.loadChapterLog) {
-      MyLog.d("TxtLoader",
-          "loadChapterContent contentLines.length ${iterable.length}");
-    }
+
+    loadChapterLog("TxtLoader", "loadChapterContent contentLines.length ${iterable.length}");
+
     FrameCross frameCross = FrameCross();
     for (String line in iterable) {
       // --------------------------------------------
@@ -116,14 +110,11 @@ class TxtLoader extends ChapterLoader {
       int edgeIndex = 0;
       int startIndex = edgeIndex;
       String splitLine = line;
-      if (debug.loadChapterLog) {
-        MyLog.d("TxtLoader",
-            "loadChapterContent splitLine.length：${splitLine.length}");
-      }
+      loadChapterLog("TxtLoader",
+          "loadChapterContent splitLine.length：${splitLine.length}");
       // TODO 需要处理仅有一行但是这一行长度很大的情况。
       while (edgeIndex < line.length) {
-        edgeIndex = edgeIndex +
-            await findLineEdge(
+        edgeIndex = edgeIndex + await findLineEdge(
                 textPainter: textPainter,
                 line: splitLine,
                 maxWidth: maxWidth,
@@ -196,22 +187,18 @@ class TxtLoader extends ChapterLoader {
       required FrameCross frameCross}) async {
     int edgeIndex = line.length;
     int maxLength = 2 * maxWidth ~/ (style.fontSize ?? 1 * textScaleFactor);
-    if (line.length > maxLength) {
+    if (maxLength > 0 && line.length > maxLength) {
       // 文字过多， 直接截断
       line = line.substring(0, maxLength);
       edgeIndex = maxLength;
-      if (debug.matchChaptersLog) {
-        MyLog.d(
-            "findLineEdge: 文字过多， 直接截断 maxLength: $maxLength; edgeIndex: $edgeIndex; line: $line");
-      }
+      matchChaptersLog(
+          "findLineEdge: 文字过多， 直接截断 maxLength: $maxLength; edgeIndex: $edgeIndex; line: $line");
     }
     measure(textPainter, line, style, maxWidth);
-    if (debug.matchChaptersLog) {
-      MyLog.d(
-          "findLineEdge: style.fontSize:${style.fontSize}; maxLength: $maxLength; edgeIndex: $edgeIndex;");
-      MyLog.d(
-          "findLineEdge: maxWidth:$maxWidth;  minIntrinsicWidth: ${textPainter.minIntrinsicWidth}/${textPainter.maxIntrinsicWidth} : didExceedMaxLines: ${textPainter.didExceedMaxLines}");
-    }
+    matchChaptersLog(
+        "findLineEdge: style.fontSize:${style.fontSize}; maxLength: $maxLength; edgeIndex: $edgeIndex;");
+    matchChaptersLog(
+        "findLineEdge: maxWidth:$maxWidth;  minIntrinsicWidth: ${textPainter.minIntrinsicWidth}/${textPainter.maxIntrinsicWidth} : didExceedMaxLines: ${textPainter.didExceedMaxLines}");
     if (textPainter.didExceedMaxLines) {
       // 大致定位文本边界：实际文本宽度/最大宽度
       edgeIndex = line.length * maxWidth ~/ textPainter.minIntrinsicWidth;
@@ -244,54 +231,49 @@ class TxtLoader extends ChapterLoader {
       TextPainter textPainter, String line, TextStyle style, double maxWidth) {
     textPainter.text = TextSpan(text: line, style: style);
     textPainter.layout(maxWidth: maxWidth);
-    if (debug.measureTextLog) {
-      MyLog.d("TxtLoader",
-          "measure: (${textPainter.width}x${textPainter.height})； ${textPainter.minIntrinsicWidth}/${textPainter.maxIntrinsicWidth}； ${textPainter.didExceedMaxLines} >> $line");
-    }
+    measureTextLog("TxtLoader",
+        "measure: (${textPainter.width}x${textPainter.height})； ${textPainter.minIntrinsicWidth}/${textPainter.maxIntrinsicWidth}； ${textPainter.didExceedMaxLines} >> $line");
   }
 }
 
+/// TODO 这个机制生效了，并且运行的很好，后续再思考如何优化。暂时记录一下为什么这么写，方便以后理解。
+/// why:
+///   loadChapterContent 频繁调用了textPainter.layout 测量章节文本内容然后进行分行分页, 导致页面卡顿， 测试发现耗时主要在测量。
+/// 也考虑过使用compute(isolates)来优化, 但是实际这么做来之后发现TextPainter.layout会报错。
+/// 报错: UI actions are only available on root isolate。。。； 主要是因为内部的 ui.ParagraphBuilder。
+///
+/// 不知如何处理，所以决定通过向事件队列添加一个Future.delay() event，并等待，让已在队列中的其他事件队列能够被执行。
 class FrameCross {
+  /// 已使用的耗时
   int computeTime = 0;
   int latestTime = DateTime.now().millisecondsSinceEpoch;
+  Duration delay = const Duration(milliseconds: 1);
 
-  /// TODO 这个机制生效了，并且运行的很好，后续再思考如何优化。暂时记录一下为什么这么写，方便以后理解。
-  /// why:
-  ///   loadChapterContent 频繁调用了textPainter.layout 测量章节文本内容然后进行分行分页, 导致页面卡顿， 测试发现主要在测量。
-  /// 也考虑过使用compute(isolates)来优化, 但是实际这么做来之后发现TextPainter.layout会报错。
-  /// 报错: UI actions are only available on root isolate。。。；主要是因为内部的ui.ParagraphBuilder。
-  ///
-  /// 不知如何处理，所以决定通过向事件队列添加一个Future.delay() event，并等待，让已在队列中的其他事件队列能够被执行。
-  /// 为了尽量模拟 60帧，在处理事件接近16ms, 添加delay event。
+  /// 通过向事件队列添加一个Future.delay() event，并等待，让已在队列中的其他事件队列能够被执行。
+  /// 为了尽量模拟 60帧，在处理事件接近16ms时 添加delay event。
   doDelay() async {
-    // --------------------------------------------
     int offsetTime = DateTime.now().millisecondsSinceEpoch - latestTime;
     computeTime += offsetTime;
     latestTime += offsetTime;
     if (computeTime > 15) {
-      // if (debug.loadChapterLog) {
-      //   MyLog.d("TxtLoader",
-      //       "FrameCross computeTime: $computeTime; offsetTime:$offsetTime;");
-      // }
+      loadChapterLog("TxtLoader",
+            "FrameCross computeTime: $computeTime; offsetTime:$offsetTime;");
       computeTime = 0;
-      await Future.delayed(const Duration(milliseconds: 1));
+      await Future.delayed(delay);
     }
   }
 }
 
 /// return MapEntry<String, List<BookChapter>>
 /// key: charset;  value: List<BookChapter>
-MapEntry<String?, List<BookChapter>> _codesMapToBookChapters(
-    MapEntry<List<int>, RegExp> data) {
+MapEntry<String?, List<BookChapter>> _codesMapToBookChapters(MapEntry<List<int>, RegExp> data) {
   List<int> codeList = data.key;
   RegExp regExp = data.value;
   CharsetDecoder decoder = CharsetDecoder();
   decoder.initCharset(codeList);
   int blankCharOffset = _blankCharOffset(decoder.charset);
-  if (debug.matchChaptersLog) {
-    MyLog.d("TxtLoader",
-        "codesMapToBookChapters RegExp: $regExp; codeList: ${codeList.length}; blankCharOffset: $blankCharOffset;");
-  }
+  matchChaptersLog("TxtLoader",
+      "codesMapToBookChapters RegExp: $regExp; codeList: ${codeList.length}; blankCharOffset: $blankCharOffset;");
   // MyLog.d(
   //     "TxtLoader",
   //     "matchTitle line(${element.length}) (${element.sublist(0, element.length).fold("", (String previousValue, int element) {
@@ -319,22 +301,18 @@ MapEntry<String?, List<BookChapter>> _codesMapToBookChapters(
       decodeList.addAll(codeList.sublist(lineStart, blankEndIndex + 1));
       // 匹配是否是标题
       String? title = matchToc(regExp, decoder.decode(decodeList));
-      if (title != null && debug.matchChaptersLog) {
-        MyLog.d("TxtLoader",
+      if (title != null) {
+        matchChaptersLog("TxtLoader",
             "codesMapToBookChapters 1 index: $i  ($lineStart - $blankEndIndex); ");
-        MyLog.d(
+        matchChaptersLog(
             "TxtLoader",
             "codesMapToBookChapters 2 $title (${codeList.sublist(lineStart, blankEndIndex + 1).fold("", (String previousValue, int element) {
               return "$previousValue 0x${element.toRadixString(16)}";
             })})");
-      }
-      if (title != null) {
         // 章节结束的位置。
         bookChapter.charEnd = lineStart;
-        if (debug.matchChaptersLog) {
-          MyLog.d("TxtLoader",
-              "codesMapToBookChapters 3 bookChapter: ${bookChapter.title} ${bookChapter.index}; charStart:${bookChapter.charStart}; charEnd:${bookChapter.charEnd}");
-        }
+        matchChaptersLog("TxtLoader",
+            "codesMapToBookChapters 3 bookChapter: ${bookChapter.title} ${bookChapter.index}; charStart:${bookChapter.charStart}; charEnd:${bookChapter.charEnd}");
         chapters.add(bookChapter.fork());
         // 重置并初始化新章节。
         bookChapter.reset(
@@ -354,21 +332,18 @@ MapEntry<String?, List<BookChapter>> _codesMapToBookChapters(
   if (bookChapter.charStart != bookChapter.charEnd) {
     chapters.add(bookChapter.fork());
   }
-  if (debug.matchChaptersLog) {
-    MyLog.d("TxtLoader",
-        "codesMapToBookChapters end charset: ${decoder.charset}; ${chapters.length}");
-  }
+  matchChaptersLog("TxtLoader",
+      "codesMapToBookChapters end charset: ${decoder.charset}; ${chapters.length}");
   return MapEntry(decoder.charset, chapters);
 }
 
 /// 返回匹配结果，若不匹配则返回null
 String? matchToc(RegExp regExp, String line) {
   Iterable<Match> matchers = regExp.allMatches(line);
-  // MyLog.d("TxtLoader", "-------------------------------");
-  // MyLog.d("TxtLoader", "matchToc line: ${matchers.length} >> $line");
+  // matchTocLog("TxtLoader", "matchToc line: ${matchers.length} >> $line");
   for (var match in matchers) {
     String? matched = match.group(0)?.trim().replaceAll("\n", "");
-    // MyLog.d("TxtLoader", "matchToc matched: $matched");
+    matchTocLog("TxtLoader", "matchToc matched: $matched");
     return matched;
   }
   return null;

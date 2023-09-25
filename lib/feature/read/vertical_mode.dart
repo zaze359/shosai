@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shosai/core/model/book_state.dart';
 import 'package:shosai/feature/read/operator_widget.dart';
 import 'package:shosai/feature/read/book_read_vm.dart';
 import 'package:shosai/feature/read/single_page_view.dart';
 import 'package:shosai/utils/log.dart';
 import 'package:shosai/widgets/loading_widget.dart';
 
-import '../../data/book_state.dart';
 
 /// 垂直滑动模式
 class VerticalMode extends StatelessWidget {

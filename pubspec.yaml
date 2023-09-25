@@ -54,6 +54,8 @@ dependencies:
   fluttertoast: ^8.0.9
   json_annotation: ^4.5.0
   cached_network_image: ^3.2.1
+  async: ^2.11.0
+  get_it: ^7.4.0
 
 
 dev_dependencies:

@@ -9,18 +9,18 @@ BookConfig bookConfig = BookConfig();
 class BookConfig {
   BookConfig._internal(this.viewWidth, this.viewHeight);
 
-  static final BookConfig _instance = BookConfig._internal(0, 0);
+  static final BookConfig _instance = BookConfig._internal(-1, -1);
 
-  factory BookConfig([double viewWidth = 0, double viewHeight = 0]) {
+  factory BookConfig([double viewWidth = -1, double viewHeight = -1]) {
     _instance.updateSize(viewWidth, viewHeight);
     return _instance;
   }
 
   /// view的宽度(单位相当于android的dp)
-  double viewWidth = 0.0;
+  double viewWidth = -1;
 
   /// view的高度(单位相当于android的dp)
-  double viewHeight = 0.0;
+  double viewHeight = -1;
 
   /// 内填充边距
   double paddingTop = 8.0;
@@ -43,6 +43,12 @@ class BookConfig {
     this.viewHeight = viewHeight;
     aspectRatio = viewWidth / viewHeight;
   }
+
+  bool isAvoid() {
+    return viewWidth <= 0.0 || viewHeight <= 0.0;
+  }
+
+
 
   // double get pageWidthPixel {
   //   return pageWidth * Display.devicePixelRatio;

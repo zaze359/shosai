@@ -18,7 +18,8 @@ BookSource _$BookSourceFromJson(Map<String, dynamic> json) => BookSource(
       ..bookInfoRule = BookInfoRule.fromJson(json['bookInfoRule'])
       ..contentRule =
           ContentRule.fromJson(json['contentRule'] as Map<String, dynamic>)
-      ..lastUpdateTime = json['lastUpdateTime'] as int;
+      ..lastUpdateTime = json['lastUpdateTime'] as int
+      ..errorFlag = json['errorFlag'] as int;
 
 Map<String, dynamic> _$BookSourceToJson(BookSource instance) =>
     <String, dynamic>{
@@ -32,6 +33,7 @@ Map<String, dynamic> _$BookSourceToJson(BookSource instance) =>
       'bookInfoRule': instance.bookInfoRule,
       'contentRule': instance.contentRule,
       'lastUpdateTime': instance.lastUpdateTime,
+      'errorFlag': instance.errorFlag,
     };
 
 BookUrl _$BookUrlFromJson(Map<String, dynamic> json) => BookUrl(

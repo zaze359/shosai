@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:shosai/data/book_source.dart';
-import 'package:shosai/data/repository/book_repository.dart';
+import 'package:shosai/core/common/di.dart';
+import 'package:shosai/core/data/repository/book_repository.dart';
+import 'package:shosai/core/model/book_source.dart';
 import 'package:shosai/routes.dart';
 import 'package:shosai/utils/log.dart';
 import 'package:shosai/widgets/tip.dart';
 
 class SpiderMode extends ChangeNotifier {
   BookSource bookSource;
+  BookRepository bookRepository = Injector.instance.get<BookRepository>();
 
   TextStyle inputTextStyle = const TextStyle(fontSize: 18, color: Colors.white);
 
@@ -22,7 +24,7 @@ class SpiderMode extends ChangeNotifier {
   }
 
   updateBookSource(BuildContext context, bookSource) {
-    BookRepository().updateBookSource(bookSource).then((value) {
+    bookRepository.updateBookSource(bookSource).then((value) {
       this.bookSource = bookSource;
       showSnackBar(context, '书源更新成功!');
     });

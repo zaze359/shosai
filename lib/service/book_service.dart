@@ -3,9 +3,9 @@ import 'dart:convert';
 import 'package:dio/dio.dart' as dio;
 
 import 'package:html/dom.dart';
-import 'package:shosai/data/book.dart';
-import 'package:shosai/data/book_source.dart';
-import 'package:shosai/data/repository/book_repository.dart';
+import 'package:shosai/core/common/di.dart';
+import 'package:shosai/core/model/book.dart';
+import 'package:shosai/core/model/book_source.dart';
 import 'package:shosai/service/dom_service.dart';
 import 'package:shosai/utils/file_util.dart';
 import 'package:shosai/utils/http/http.dart';
@@ -14,12 +14,15 @@ import 'package:shosai/utils/log.dart';
 import 'package:shosai/utils/rule_convert.dart';
 import 'package:shosai/utils/utils.dart';
 
+import '../core/data/repository/book_repository.dart';
+
 BookService bookService = BookService();
 
 class BookService {
   BookService._internal();
 
   static final BookService _bookService = BookService._internal();
+  BookRepository bookRepository = Injector.instance.get<BookRepository>();
 
   factory BookService() => _bookService;
 
@@ -38,7 +41,7 @@ class BookService {
     //
     bookSourceLog("开始搜索: $searchUrl >> $map");
     bookSourceLog("开始搜索 source: $searchUrl");
-    Document document = await domService.requestHtml(
+    Document? document = await domService.requestHtml(
       ZRequest(
         searchUrl,
         queryParameters: map,
@@ -48,6 +51,12 @@ class BookService {
         ),
       ),
     );
+    if(document == null) {
+       bookSourceLog("未获取到内容: $searchUrl");
+       source.markError();
+       return [];
+    }
+    source.markSuccess();
     bookSourceLog("搜索完成: ${document.outerHtml}");
     SearchRule searchRule = source.searchRule;
     bookSourceLog("开始解析书籍列表");
@@ -106,7 +115,7 @@ class BookService {
     }
     UrlKeys keys = UrlKeys();
     Map<String, dynamic>? map = keys.combine(bookUrl.params);
-    Document document = await domService.requestHtml(
+    Document? document = await domService.requestHtml(
       ZRequest(
         path,
         queryParameters: map,
@@ -114,6 +123,10 @@ class BookService {
         options: dio.Options(method: bookUrl.method ?? "GET"),
       ),
     );
+    if(document == null) {
+      bookSourceLog("未获取到内容: ${source.url}");
+      return book;
+    }
     bookSourceLog("书籍详情获取完成: ${document.outerHtml}");
     BookInfoRule rule = source.bookInfoRule;
     bookSourceLog("开始解析书籍详情: $rule");
@@ -145,12 +158,17 @@ class BookService {
       bookSourceLog("未获取到目录地址");
       return [];
     }
-    Document document = await domService.requestHtml(
+    Document? document = await domService.requestHtml(
       ZRequest(
         path,
         options: dio.Options(method: source.searchUrl.method ?? "GET"),
       ),
     );
+
+    if(document == null) {
+      bookSourceLog("未获取到内容: ${source.url}");
+      return [];
+    }
     bookSourceLog("标题列表获取完成: ${document.outerHtml}");
     TocRule tocRule = source.tocRule;
     bookSourceLog("开始解析标题列表");
@@ -205,11 +223,15 @@ class BookService {
     UrlKeys keys = UrlKeys();
     ContentRule? contentRule = bookSource?.contentRule;
 
-    Document document = await domService.requestHtml(
+    Document? document = await domService.requestHtml(
       ZRequest(urlPath,
           queryParameters: keys.combine(bookUrl.params),
           options: dio.Options(method: bookUrl.method ?? "GET")),
     );
+    if(document == null) {
+      bookSourceLog("未获取到内容: $urlPath");
+      return;
+    }
     bookSourceLog("开始解析章节内容: $contentRule");
     String content;
     if (contentRule != null) {
@@ -252,7 +274,7 @@ class BookService {
     downloadManager.download(request, onStart: onStart, onProgress: onProgress,
         onSuccess: (savePath) {
       chapter.localPath = savePath;
-      BookRepository().insertOrUpdateChapter(chapter).whenComplete(() {
+      bookRepository.insertOrUpdateChapter(chapter).whenComplete(() {
         onSuccess?.call(savePath);
       });
     }, onFailure: onFailure);

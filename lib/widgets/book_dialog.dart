@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:shosai/data/book.dart';
+import 'package:shosai/core/model/book.dart';
 
 /// 书籍删除弹窗
 class DeleteBookDialog extends StatelessWidget {

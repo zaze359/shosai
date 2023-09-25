@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:shosai/data/book_source.dart';
+import 'package:shosai/core/model/book_source.dart';
 
 double rowHeight = 36;
 

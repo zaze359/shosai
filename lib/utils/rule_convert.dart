@@ -1,11 +1,14 @@
 import 'dart:convert';
 import 'package:flutter/services.dart';
-import 'package:shosai/data/book_source.dart';
-import 'package:shosai/data/repository/book_repository.dart';
+import 'package:shosai/core/common/di.dart';
+import 'package:shosai/core/data/repository/book_repository.dart';
+import 'package:shosai/core/model/book_source.dart';
 import 'package:shosai/utils/log.dart';
 
 /// 规则转换
 class ConvertRule {
+  BookRepository bookRepository = Injector.instance.get<BookRepository>();
+
   Future<List<BookSource>> formLegadoJson(String legadoRule) async {
     legadoRule =
         await rootBundle.loadString("assets/sources/book_sources.json", cache: false);
@@ -13,20 +16,21 @@ class ConvertRule {
       return [];
     }
     List legadoJson = json.decode(legadoRule);
+
     List<BookSource> list = [];
     for (var element in legadoJson) {
       try {
         BookSource? source = _formLegadoJson(element);
         if (source != null) {
-          var a = json.decode(json.encode(source));
-          printD("ConvertRule formLegadoJson : ${a.runtimeType} ${a}");
+          // var a = json.decode(json.encode(source));
+          // printD("ConvertRule formLegadoJson : ${a.runtimeType} ${a}");
           list.add(source);
         }
       } on Exception catch (e, s) {
         // printD("ConvertRule formLegadoJson error: $e  $s");
       }
     }
-    await BookRepository().insertBookSources(list);
+    await bookRepository.insertBookSources(list);
     return list;
   }
 
@@ -130,7 +134,7 @@ class ConvertRule {
         rule.startsWith("+<js>") ||
         rule.contains("\$.") ||
         rule.contains("java.")) {
-      throw Exception("un_support rule: $rule");
+      throw Exception("un_support rule: $rule\n");
     }
   }
 

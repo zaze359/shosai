@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:shosai/data/book.dart';
-import 'package:shosai/data/repository/book_repository.dart';
+import 'package:shosai/core/common/di.dart';
+import 'package:shosai/core/data/repository/book_repository.dart';
+import 'package:shosai/core/model/book.dart';
 import 'package:shosai/feature/bookshelf/book_list_page.dart';
 import 'package:shosai/routes.dart';
+import 'package:shosai/utils/controller.dart';
 import 'package:shosai/utils/custom_event.dart';
 import 'package:shosai/utils/file_util.dart';
 import 'package:shosai/utils/import.dart' as imports;
@@ -15,11 +17,7 @@ import 'package:shosai/widgets/loading_widget.dart';
 /// @author zaze
 /// @date 2022/6/5 - 01:48
 class BookshelfPage extends StatefulWidget {
-  BookshelfPage({super.key});
-
-  final List<Book> books = [];
-
-  final BookRepository _bookRepository = BookRepository();
+  const BookshelfPage({super.key});
 
   @override
   State<StatefulWidget> createState() {
@@ -29,15 +27,17 @@ class BookshelfPage extends StatefulWidget {
 
 class _BookshelfPageState extends State<BookshelfPage> {
   StreamSubscription? subscription;
+  BookRepository bookRepository = Injector.instance.get<BookRepository>();
+
+  Future<List<Book>> queryAllBooks() async {
+    bookController.books = await bookRepository.queryAllBooks();
+    return bookController.books;
+  }
 
   /// 更新书架
-  Future<void> _refreshBookshelf() async {
-    var newList = await _queryAllBooks();
+  Future<void> refreshBookshelf() async {
+    await queryAllBooks();
     setState(() {
-      widget.books.clear();
-      if (newList.isNotEmpty) {
-        widget.books.addAll(newList);
-      }
     });
   }
 
@@ -49,8 +49,8 @@ class _BookshelfPageState extends State<BookshelfPage> {
   Future<void> _updateBook(Book book) async {
     book.latestVisitTime = DateTime.now().millisecondsSinceEpoch;
     // MyLog.d("_BookItem", "_openBook: ${book.name}");
-    await widget._bookRepository.insertOrUpdateBook(book);
-    _refreshBookshelf();
+    await bookRepository.insertOrUpdateBook(book);
+    refreshBookshelf();
   }
 
   showBookDetail(Book book) {
@@ -59,11 +59,7 @@ class _BookshelfPageState extends State<BookshelfPage> {
 
   Future<void> _dealEvent(BookEvent event) async {
     MyLog.d("_BookItem", "_dealEvent: $event;");
-    return _refreshBookshelf();
-  }
-
-  Future<List<Book>> _queryAllBooks() async {
-    return widget._bookRepository.queryAllBooks();
+    return refreshBookshelf();
   }
 
   @override
@@ -117,7 +113,7 @@ class _BookshelfPageState extends State<BookshelfPage> {
           return true;
         },
         child: LoadingBuild.circle(
-          future: _queryAllBooks(),
+          future: queryAllBooks(),
           success: (BuildContext context, List<Book>? value) {
             return _showBookshelf(value);
           },
@@ -131,7 +127,7 @@ class _BookshelfPageState extends State<BookshelfPage> {
         ? _empty()
         : RefreshIndicator(
             onRefresh: () {
-              return _refreshBookshelf();
+              return refreshBookshelf();
             },
             child: BookListPage(
               books,
@@ -141,7 +137,6 @@ class _BookshelfPageState extends State<BookshelfPage> {
           );
   }
 
-  //
   Widget _empty() {
     return Center(
       child: TextButton(
@@ -165,13 +160,13 @@ class _BookshelfPageState extends State<BookshelfPage> {
         // TODO 需要优化处理，相名文件的处理
         String newPath = element.absolute.path.replaceAll(
             element.parent.absolute.path, await FileService.supportDir());
-        widget._bookRepository
+        bookRepository
             .insertOrUpdateBook(Book.formFile(await element.copy(newPath)));
       } else {
-        widget._bookRepository.insertOrUpdateBook(Book.formFile(element));
+        bookRepository.insertOrUpdateBook(Book.formFile(element));
       }
     }
-    _refreshBookshelf();
+    refreshBookshelf();
   }
 }
 
