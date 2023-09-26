@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:shosai/core/model/book.dart';
+import 'package:shosai/utils/log.dart';
 
 /// 书籍封面
 class BookCover extends StatelessWidget {
@@ -26,11 +27,16 @@ class BookCover extends StatelessWidget {
 
   loadImage(Book book) {
     String? url = book.coverUrl;
+    // MyLog.i("BookCover", "loadImage: ${book.name} $url");
     if (url == null) {
       return Center(
-        child: Text(
-          book.name ?? "",
-          style: TextStyle(fontSize: 18, color: Colors.black),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(4, 0, 4, 0),
+          child: Text(
+            book.name ?? "",
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 16, color: Colors.black),
+          ),
         ),
       );
     }
@@ -40,7 +46,10 @@ class BookCover extends StatelessWidget {
         placeholder: (context, url) => const Center(
               child: CircularProgressIndicator(),
             ),
-        errorWidget: (context, url, error) => const Icon(Icons.error));
+        errorWidget: (context, url, error) {
+          MyLog.e("BookCover", "error: $error; $url");
+          return const Icon(Icons.error);
+        });
   }
 }
 

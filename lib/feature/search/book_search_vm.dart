@@ -14,13 +14,14 @@ class BookSearchViewModel extends ChangeNotifier {
   List<Book> books = [];
 
   BookSearchViewModel(this.bookSource);
+
   CancelableOperation<void>? searchOperation;
   BookRepository bookRepository = Injector.instance.get<BookRepository>();
 
   String? _latelyKey;
 
   startSearch(String key) {
-    if(_latelyKey != key) {
+    if (!isRunning() || _latelyKey != key) {
       books.clear();
       stopSearch();
       searchOperation = CancelableOperation<void>.fromFuture(_startSearch(key));
@@ -28,13 +29,20 @@ class BookSearchViewModel extends ChangeNotifier {
   }
 
   stopSearch() {
+    bookSourceLog("取消搜索：$_latelyKey");
     searchOperation?.cancel();
     _latelyKey = null;
+    notifyListeners();
+  }
+
+  bool isRunning() {
+    return searchOperation?.isCanceled != true ||
+        searchOperation?.isCompleted != true;
   }
 
   _startSearch(String key) async {
     _latelyKey = key;
-    print("startSearch: $key");
+    bookSourceLog("startSearch: $key");
     if (key.isEmpty) {
       Fluttertoast.cancel();
       Fluttertoast.showToast(
@@ -45,19 +53,23 @@ class BookSearchViewModel extends ChangeNotifier {
     } else {
       if (bookSource != null) {
         bookSourceLog("指定源中搜索：$bookSource");
-        books = await bookService.search(bookSource, UrlKeys(key: key));
+        _updateBooks(await bookService.search(bookSource, UrlKeys(key: key)));
         await bookRepository.updateBookSource(bookSource);
-        notifyListeners();
       } else {
         bookSourceLog("所有源中搜索");
         List<BookSource> searchedSources =
             await bookRepository.queryAllBookSources();
         for (var element in searchedSources) {
-          books.addAll(await bookService.search(element, UrlKeys(key: key)));
+          _updateBooks(await bookService.search(element, UrlKeys(key: key)));
           await bookRepository.updateBookSource(element);
-          notifyListeners();
         }
       }
     }
+  }
+
+  _updateBooks(List<Book> newBooks) {
+    books.addAll(newBooks);
+    // bookSourceLog("BookListPage: ${books.length}");
+    notifyListeners();
   }
 }

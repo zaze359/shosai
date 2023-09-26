@@ -118,7 +118,7 @@ abstract class BaseTable<T> {
   }
 
   Future<List<Object?>> batchInsert(Database db, List<T> list)  {
-    MyLog.d("Table", "${getTableName()} batchInsert: ${list[0]}");
+    MyLog.d("Table", "${getTableName()} batchInsert: ${list.length}");
     Batch batch = db.batch();
     for (var element in list) {
       batch.insert(getTableName(), toMap(element),

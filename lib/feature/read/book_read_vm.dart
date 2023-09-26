@@ -7,24 +7,25 @@ import 'package:shosai/utils/controller.dart';
 import 'package:shosai/utils/custom_event.dart';
 import 'package:shosai/utils/log.dart';
 
-
 class BookReadViewModel with ChangeNotifier, DiagnosticableTreeMixin {
-
   BookReadViewModel(this._book) {
     bookController.book = _book;
   }
-
 
   bool menuVisible = false;
   PageController controller = PageController();
 
   final Book _book;
+
   Book get book => _book;
   ConnectionState connectionState = ConnectionState.done;
+
   /// initialPage
   int initialPage = 0;
+
   /// 所有需要显示的页面
   List<PageState> showPages = [];
+
   PageState get curPage {
     if (initialPage >= showPages.length) {
       return PageState.empty();
@@ -72,9 +73,7 @@ class BookReadViewModel with ChangeNotifier, DiagnosticableTreeMixin {
     //
     if (nextChapter != null) {
       showPages.addAll(nextChapter.pages);
-      if(nextChapter.pages.length == 1) {
-
-      }
+      if (nextChapter.pages.length == 1) {}
     }
     MyLog.d("PageModel composeChapter showPages: ${showPages.length}");
     return showPages;
@@ -136,9 +135,11 @@ class BookReadViewModel with ChangeNotifier, DiagnosticableTreeMixin {
     MyLog.d("PageModel onPageChanged: ${index + 1}, ${showPages.length} ");
     initialPage = index;
     bookController.moveToChapter(curPage.chapterIndex);
-    if (index == 0) {
+    // 预加载偏移量，不足时自动加载 上下章
+    int preOffset = 10;
+    if (index <= preOffset) {
       _prevChapter(true);
-    } else if (index == showPages.length - 1) {
+    } else if (index >= showPages.length - 1 - preOffset) {
       _nextChapter(true);
     }
   }
@@ -187,8 +188,6 @@ class BookReadViewModel with ChangeNotifier, DiagnosticableTreeMixin {
     menuVisible = false;
     notifyListeners();
   }
-
-
 }
 //
 // /// UI状态控制

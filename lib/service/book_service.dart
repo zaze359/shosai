@@ -51,10 +51,10 @@ class BookService {
         ),
       ),
     );
-    if(document == null) {
-       bookSourceLog("未获取到内容: $searchUrl");
-       source.markError();
-       return [];
+    if (document == null) {
+      bookSourceLog("未获取到内容: $searchUrl");
+      source.markError();
+      return [];
     }
     source.markSuccess();
     bookSourceLog("搜索完成: ${document.outerHtml}");
@@ -80,7 +80,11 @@ class BookService {
       book.updateTime = searchRule.updateTime.getResult(element);
       book.latestChapterTitle = searchRule.latestChapter.getResult(element);
       String coverUrl = searchRule.coverUrl.getResult(element);
-      book.coverUrl = appendUrl(source.url, coverUrl);
+      if (coverUrl.isNotEmpty) {
+        book.coverUrl = appendUrl(source.url, coverUrl);
+      } else {
+        book.coverUrl = null;
+      }
       // String tocUrl = searchRule.bookList.getResult(element);
       // book.tocUrl = append(source.url, coverUrl);
 
@@ -123,7 +127,7 @@ class BookService {
         options: dio.Options(method: bookUrl.method ?? "GET"),
       ),
     );
-    if(document == null) {
+    if (document == null) {
       bookSourceLog("未获取到内容: ${source.url}");
       return book;
     }
@@ -135,7 +139,12 @@ class BookService {
     book.intro = rule.intro.getResult(document);
     book.tags = rule.tags.getResult(document, separator: ",");
     book.latestChapterTitle = rule.lastChapter.getResult(document);
-    book.coverUrl = appendUrl(source.url, rule.coverUrl.getResult(document));
+    String coverUrl = rule.coverUrl.getResult(document);
+    if (coverUrl.isNotEmpty) {
+      book.coverUrl = appendUrl(source.url, rule.coverUrl.getResult(document));
+    } else {
+      book.coverUrl = null;
+    }
     book.tocUrl = jsonEncode(ConvertRule().convertBookUrl(
       BookUrl(),
       appendUrl(
@@ -165,7 +174,7 @@ class BookService {
       ),
     );
 
-    if(document == null) {
+    if (document == null) {
       bookSourceLog("未获取到内容: ${source.url}");
       return [];
     }
@@ -228,7 +237,7 @@ class BookService {
           queryParameters: keys.combine(bookUrl.params),
           options: dio.Options(method: bookUrl.method ?? "GET")),
     );
-    if(document == null) {
+    if (document == null) {
       bookSourceLog("未获取到内容: $urlPath");
       return;
     }
@@ -279,7 +288,6 @@ class BookService {
       });
     }, onFailure: onFailure);
   }
-
 
   Future<String> localDir(String bookId) async {
     return "${await FileService.externalDir()}/${Utils.md5Str(bookId)}/";

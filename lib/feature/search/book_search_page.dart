@@ -73,7 +73,7 @@ class _BookSearchPageState extends State<BookSearchPage> {
           ),
           floatingActionButton: FloatingActionButton(
             onPressed: () {
-              bookViewModel.startSearch(textEditingController.text);
+              bookViewModel.stopSearch();
             },
             child: const Icon(Icons.stop),
           ),

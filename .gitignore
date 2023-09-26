@@ -33,7 +33,7 @@ local.properties
 .pub/
 /build/
 
-assets/sources/*
+/assets/sources/*
 
 # Symbolication related
 app.*.symbols

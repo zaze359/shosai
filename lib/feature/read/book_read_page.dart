@@ -169,7 +169,6 @@ class _MenuState extends State<_MenuWidget> {
   @override
   Widget build(BuildContext context) {
     bool menuVisible = context.watch<BookReadViewModel>().menuVisible;
-    MyLog.d("_MenuState", "build menuVisible: $menuVisible");
     return Offstage(
       offstage: !menuVisible,
       child: Scaffold(
@@ -239,12 +238,6 @@ class _MenuState extends State<_MenuWidget> {
         ),
       ),
     );
-  }
-
-  @override
-  void didChangeDependencies() {
-    MyLog.d("_MenuState", "didChangeDependencies");
-    super.didChangeDependencies();
   }
 }
 

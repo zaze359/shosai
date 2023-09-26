@@ -1,9 +1,19 @@
 buildscript {
     ext.kotlin_version = '1.8.0'
+
+    Properties properties = new Properties()
+    properties.load(rootProject.file("local.properties").newDataInputStream())
+    ext.useLocalMaven = properties.getProperty("useLocalMaven")
     repositories {
-        maven { url 'https://maven.aliyun.com/repository/public' }
-        maven { url 'https://maven.aliyun.com/repository/jcenter' }
-        maven { url 'https://maven.aliyun.com/repository/google' }
+        if (rootProject.ext.useLocalMaven == "true") {
+            println("useLocalMaven")
+            maven {
+                allowInsecureProtocol = true
+                url 'http://localhost:8081/repository/maven-public/'
+            }
+        }
+        mavenLocal()
+        maven { url 'https://maven.aliyun.com/repository/gradle-plugin' }
         google()
         mavenCentral()
     }
@@ -16,6 +26,13 @@ buildscript {
 
 allprojects {
     repositories {
+        if (rootProject.ext.useLocalMaven == "true") {
+            maven {
+                allowInsecureProtocol = true
+                url 'http://localhost:8081/repository/maven-public'
+            }
+        }
+        mavenLocal()
         maven { url 'https://maven.aliyun.com/repository/public' }
         maven { url 'https://maven.aliyun.com/repository/jcenter' }
         maven { url 'https://maven.aliyun.com/repository/google' }
